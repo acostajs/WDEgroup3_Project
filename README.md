@@ -18,8 +18,8 @@ Manual scheduling leads to inefficiencies, such as overstaffing during slow peri
 
 ## Technology Stack
 ### Option 1:
-- **Front-end:** Vanilla JS + HTML/CSS or Vue.js
-- **Back-end:** Node.js with Express
+- **Front-end:** Vanilla TypeScript + HTML/CSS or Vue.js
+- **Back-end:** Node.js with Express (TypeScript)
 - **Database:** MongoDB Atlas (free tier) or MySQL (AWS free tier)
 - **Hosting:** Render (back-end), Vercel/Netlify (front-end)
 - **Authentication:** Firebase Auth/Auth0 (optional, free tier)
