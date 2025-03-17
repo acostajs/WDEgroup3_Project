@@ -14,7 +14,6 @@ DEBUG = os.getenv('DEBUG') == 'True'
 ALLOWED_HOSTS = ["*"]
 AUTH_USER_MODEL = 'scheduling.User'
 
-
 # Installed Apps
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -43,20 +42,21 @@ MIDDLEWARE = [
 # CORS Configuration
 CORS_ALLOW_ALL_ORIGINS = True
 
-# Database Configuration
+# Database Configuration using dj_database_url
 DATABASE_URL = os.getenv('DATABASE_URL')
+
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL is not set! Check your .env file.")
+
 DATABASES = {
     'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
 }
 
-# Static & Media Files
-STATIC_URL = '/static/'
-
-# Templates
+# Templates Configuration (Required for Django Admin)
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [BASE_DIR / 'templates'],  # You can change this if needed
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -69,5 +69,3 @@ TEMPLATES = [
     },
 ]
 
-# Default primary key field type
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
