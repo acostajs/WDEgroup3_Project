@@ -5,6 +5,7 @@ import connectDB from "./db";
 import scheduleRoutes from "./routes/scheduleRoutes";
 import userRoutes from "./routes/userRoutes";
 import performanceRoutes from "./routes/performanceRoutes";
+import authRoutes from "./routes/authRoutes";
 
 dotenv.config();
 connectDB(); // Connect to MongoDB
@@ -17,6 +18,7 @@ app.use(cors());
 app.use("/api/schedules", scheduleRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/performance", performanceRoutes);
+app.use("/api/auth", authRoutes);
 
 const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, () => {

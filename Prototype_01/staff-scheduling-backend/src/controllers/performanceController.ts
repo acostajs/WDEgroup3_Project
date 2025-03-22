@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Performance from "../models/Performance";
 
-// Get performance records
+// Get all performance records
 export const getPerformance = async (req: Request, res: Response) => {
   try {
     const performanceData = await Performance.find().populate("employeeId", "name role");
@@ -11,7 +11,7 @@ export const getPerformance = async (req: Request, res: Response) => {
   }
 };
 
-// Create a performance entry
+// Create a new performance entry
 export const createPerformanceEntry = async (req: Request, res: Response) => {
   const { employeeId, efficiencyScore, attendance } = req.body;
 

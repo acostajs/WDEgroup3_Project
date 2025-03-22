@@ -1,6 +1,10 @@
 import express from "express";
-import { getPerformance } from "../controllers/performanceController";
+import { getPerformance, createPerformanceEntry } from "../controllers/performanceController";
+import { authMiddleware } from "../middleware/authMiddleware"; // Protect routes if needed
 
 const router = express.Router();
-router.get("/", getPerformance);
+
+router.get("/", authMiddleware, getPerformance); // Requires authentication
+router.post("/", authMiddleware, createPerformanceEntry); // Requires authentication
+
 export default router;
