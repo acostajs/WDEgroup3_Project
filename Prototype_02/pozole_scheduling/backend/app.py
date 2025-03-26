@@ -33,9 +33,29 @@ def get_employee(employee_id):
         return jsonify(employee.__dict__)
     return jsonify({"error": "Employee not found"}), 404
 
-@app.route('/', methods=['GET'])
-def hello_world():
-    return 'Hello, World!'
+@app.put('/employees/<int:employee_id>')
+def update_employee(employee_id):
+    employee = next((emp for emp in employees if emp.employee_id == employee_id), None)
+    if not employee:
+        return jsonify({"error": "Employee not found"}), 404
+
+    data = request.get_json()
+    if not data or 'name' not in data or 'role' not in data or 'availability' not in data:
+        return jsonify({"error": "Missing required fields"}), 400
+
+    employee.name = data['name']
+    employee.role = data['role']
+    employee.availability = data['availability']
+    return jsonify(employee.__dict__)
+
+@app.delete('/employees/<int:employee_id>')
+def delete_employee(employee_id):
+    global employees
+    initial_length = len(employees)
+    employees = [emp for emp in employees if emp.employee_id != employee_id]
+    if len(employees) < initial_length:
+        return jsonify({"message": "Employee deleted successfully"}), 200
+    return jsonify({"error": "Employee not found"}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)
