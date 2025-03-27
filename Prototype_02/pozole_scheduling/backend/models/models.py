@@ -19,7 +19,7 @@ class Shift(db.Model):
     start_time = db.Column(db.String(10), nullable=False)
     end_time = db.Column(db.String(10), nullable=False)
     day = db.Column(db.String(20), nullable=False)
-    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=True)
 
     def __repr__(self):
         return f"<Shift(id={self.id}, day='{self.day}', start_time='{self.start_time}', end_time='{self.end_time}', employee_id={self.employee_id})>"

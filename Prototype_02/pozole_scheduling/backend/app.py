@@ -1,21 +1,21 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db' 
-db = SQLAlchemy(app)
-
 from backend.models.models import Employee, Shift
 from backend.schemas import EmployeeSchema, ShiftSchema
 
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+db = SQLAlchemy(app)
+
 with app.app_context():
-    db.create_all() 
-    
+    db.create_all()
+
+# Initialize Marshmallow schemas
 employee_schema = EmployeeSchema()
 employees_schema = EmployeeSchema(many=True)
 shift_schema = ShiftSchema()
 shifts_schema = ShiftSchema(many=True)
- 
+
 @app.post('/employees')
 def create_employee():
     data = request.get_json()
@@ -76,14 +76,16 @@ def delete_employee(employee_id):
 @app.post('/shifts')
 def create_shift():
     data = request.get_json()
-    if not data or 'start_time' not in data or 'end_time' not in data or 'day' not in data or 'employee_id' not in data:
-        return jsonify({"error": "Missing required shift fields"}), 400
+    if not data or 'start_time' not in data or 'end_time' not in data or 'day' not in data:
+        return jsonify({"error": "Missing required shift fields (start_time, end_time, day)"}), 400
+
+    employee_id = data.get('employee_id')  # Allow employee_id to be None
 
     new_shift = Shift(
         start_time=data['start_time'],
         end_time=data['end_time'],
         day=data['day'],
-        employee_id=data['employee_id']
+        employee_id=employee_id
     )
     db.session.add(new_shift)
     db.session.commit()
@@ -131,6 +133,63 @@ def delete_shift(shift_id):
     db.session.delete(shift)
     db.session.commit()
     return jsonify({"message": "Shift deleted successfully"}), 200
+
+@app.put('/shifts/<int:shift_id>/assign')
+def assign_employee_to_shift(shift_id):
+    shift = db.session.get(Shift, shift_id)
+    if not shift:
+        return jsonify({"error": "Shift not found"}), 404
+
+    data = request.get_json()
+    if not data or 'employee_id' not in data:
+        return jsonify({"error": "Missing employee_id"}), 400
+
+    employee_id = data['employee_id']
+    employee = db.session.get(Employee, employee_id)
+    if not employee:
+        return jsonify({"error": "Employee not found"}), 400
+
+    if shift.employee_id is not None:
+        assigned_employee = db.session.get(Employee, shift.employee_id)
+        if assigned_employee:
+            return jsonify({"error": f"Shift is already assigned to employee {assigned_employee.name}"}), 400
+        else:
+            return jsonify({"error": "Shift is already assigned to an employee (employee data not found)"}), 400
+
+    shift_day = shift.day
+    employee_availability = employee.availability
+
+    if shift_day not in employee_availability or employee_availability[shift_day].lower() == 'off':
+        return jsonify({"error": f"Employee {employee.name} is not available on {shift_day}"}), 400
+
+    shift.employee_id = employee_id
+    db.session.commit()
+    result = shift_schema.dump(shift)
+    return jsonify(result), 200
+
+@app.put('/shifts/<int:shift_id>/unassign')
+def unassign_employee_from_shift(shift_id):
+    shift = db.session.get(Shift, shift_id)
+    if not shift:
+        return jsonify({"error": "Shift not found"}), 404
+
+    if shift.employee_id is None:
+        return jsonify({"message": "Shift is not currently assigned to any employee"}), 200
+
+    shift.employee_id = None
+    db.session.commit()
+    result = shift_schema.dump(shift)
+    return jsonify(result), 200
+
+@app.get('/employees/<int:employee_id>/shifts')
+def get_employee_shifts(employee_id):
+    employee = db.session.get(Employee, employee_id)
+    if not employee:
+        return jsonify({"error": "Employee not found"}), 404
+
+    shifts = db.session.query(Shift).filter(Shift.employee_id == employee_id).all()
+    result = shifts_schema.dump(shifts)
+    return jsonify(result)
 
 if __name__ == '__main__':
     app.run(debug=True)
