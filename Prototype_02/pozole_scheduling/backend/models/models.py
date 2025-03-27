@@ -1,20 +1,25 @@
-class Employee:
-    def __init__(self, employee_id: int, name: str, role: str, availability: dict):
-        self.employee_id = employee_id
-        self.name = name
-        self.role = role
-        self.availability = availability
+from backend.app import db
+from sqlalchemy.dialects.sqlite import JSON
+
+
+class Employee(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), nullable=False)
+    role = db.Column(db.String(80), nullable=False)
+    availability = db.Column(JSON)  # Use TEXT for SQLite
+
+    shifts = db.relationship('Shift', backref='employee', lazy=True)
 
     def __repr__(self):
-        return f"<Employee(employee_id={self.employee_id}, name='{self.name}', role='{self.role}')>"
+        return f"<Employee(id={self.id}, name='{self.name}', role='{self.role}')>"
 
-class Shift:
-    def __init__(self, shift_id: int, start_time: str, end_time: str, day: str, employee_id: int):
-        self.shift_id = shift_id
-        self.start_time = start_time
-        self.end_time = end_time
-        self.day = day
-        self.employee_id = employee_id
+
+class Shift(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    start_time = db.Column(db.String(10), nullable=False)
+    end_time = db.Column(db.String(10), nullable=False)
+    day = db.Column(db.String(20), nullable=False)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
 
     def __repr__(self):
-        return f"<Shift(shift_id={self.shift_id}, day='{self.day}', start_time='{self.start_time}', end_time='{self.end_time}', employee_id={self.employee_id})>"
+        return f"<Shift(id={self.id}, day='{self.day}', start_time='{self.start_time}', end_time='{self.end_time}', employee_id={self.employee_id})>"
