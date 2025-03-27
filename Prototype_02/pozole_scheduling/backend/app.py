@@ -1,11 +1,14 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
-from backend.models.models import Employee, Shift
-from backend.schemas import EmployeeSchema, ShiftSchema
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
-db = SQLAlchemy(app)
+db = SQLAlchemy(app)  # Initialize db here
+
+from backend.models.models import Employee, Shift
+from backend.schemas import EmployeeSchema, ShiftSchema
+from marshmallow import ValidationError
 
 with app.app_context():
     db.create_all()
@@ -16,21 +19,44 @@ employees_schema = EmployeeSchema(many=True)
 shift_schema = ShiftSchema()
 shifts_schema = ShiftSchema(many=True)
 
+# UI
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/employees_ui')
+def list_employees_ui():
+    employees = get_employees_data()  # Use a helper function to get employee data
+    return render_template('employees.html', employees=employees)
+
+@app.route('/shifts_ui')
+def list_shifts_ui():
+    shifts = get_shifts_data()  # Use a helper function to get shift data
+    return render_template('shifts.html', shifts=shifts)
+
+def get_employees_data():
+    all_employees = db.session.query(Employee).all()
+    return employees_schema.dump(all_employees)
+
+def get_shifts_data():
+    all_shifts = db.session.query(Shift).all()
+    return shifts_schema.dump(all_shifts)
+
+# EMPLOYEES
+
 @app.post('/employees')
 def create_employee():
-    data = request.get_json()
-    if not data or 'name' not in data or 'role' not in data or 'availability' not in data:
-        return jsonify({"error": "Missing required fields"}), 400
-
-    new_employee = Employee(
-        name=data['name'],
-        role=data['role'],
-        availability=data['availability']
-    )
-    db.session.add(new_employee)
-    db.session.commit()
-    result = employee_schema.dump(new_employee)
-    return jsonify(result), 201
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Missing JSON data"}), 400
+        validated_employee = employee_schema.load(data, session=db.session) 
+        db.session.add(validated_employee)
+        db.session.commit()
+        result = employee_schema.dump(validated_employee)
+        return jsonify(result), 201
+    except ValidationError as err:
+        return jsonify({"error": err.messages}), 400
 
 @app.get('/employees')
 def get_employees():
@@ -52,17 +78,25 @@ def update_employee(employee_id):
     if not employee:
         return jsonify({"error": "Employee not found"}), 404
 
-    data = request.get_json()
-    if not data or 'name' not in data or 'role' not in data or 'availability' not in data:
-        return jsonify({"error": "Missing required fields"}), 400
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Missing JSON data"}), 400
+        validated_employee = employee_schema.load(data, session=db.session, partial=True)
 
-    employee.name = data['name']
-    employee.role = data['role']
-    employee.availability = data['availability']
-    db.session.commit()
-    result = employee_schema.dump(employee)
-    return jsonify(result)
+        if hasattr(validated_employee, 'name'):
+            employee.name = validated_employee.name
+        if hasattr(validated_employee, 'role'):
+            employee.role = validated_employee.role
+        if hasattr(validated_employee, 'availability'):
+            employee.availability = validated_employee.availability
 
+        db.session.commit()
+        result = employee_schema.dump(employee)
+        return jsonify(result)
+    except ValidationError as err:
+        return jsonify({"error": err.messages}), 400
+    
 @app.delete('/employees/<int:employee_id>')
 def delete_employee(employee_id):
     employee = db.session.get(Employee, employee_id)
@@ -73,24 +107,21 @@ def delete_employee(employee_id):
     db.session.commit()
     return jsonify({"message": "Employee deleted successfully"}), 200
 
+# SHIFTS
+
 @app.post('/shifts')
 def create_shift():
-    data = request.get_json()
-    if not data or 'start_time' not in data or 'end_time' not in data or 'day' not in data:
-        return jsonify({"error": "Missing required shift fields (start_time, end_time, day)"}), 400
-
-    employee_id = data.get('employee_id')  # Allow employee_id to be None
-
-    new_shift = Shift(
-        start_time=data['start_time'],
-        end_time=data['end_time'],
-        day=data['day'],
-        employee_id=employee_id
-    )
-    db.session.add(new_shift)
-    db.session.commit()
-    result = shift_schema.dump(new_shift)
-    return jsonify(result), 201
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Missing JSON data"}), 400
+        validated_shift = shift_schema.load(data, session=db.session)
+        db.session.add(validated_shift)
+        db.session.commit()
+        result = shift_schema.dump(validated_shift)
+        return jsonify(result), 201
+    except ValidationError as err:
+        return jsonify({"error": err.messages}), 400
 
 @app.get('/shifts')
 def get_shifts():
@@ -112,18 +143,28 @@ def update_shift(shift_id):
     if not shift:
         return jsonify({"error": "Shift not found"}), 404
 
-    data = request.get_json()
-    if not data or 'start_time' not in data or 'end_time' not in data or 'day' not in data or 'employee_id' not in data:
-        return jsonify({"error": "Missing required shift fields"}), 400
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Missing JSON data"}), 400
+        validated_shift = shift_schema.load(data, session=db.session, partial=True)
 
-    shift.start_time = data['start_time']
-    shift.end_time = data['end_time']
-    shift.day = data['day']
-    shift.employee_id = data['employee_id']
-    db.session.commit()
-    result = shift_schema.dump(shift)
-    return jsonify(result)
+        if hasattr(validated_shift, 'start_time'):
+            shift.start_time = validated_shift.start_time
+        if hasattr(validated_shift, 'end_time'):
+            shift.end_time = validated_shift.end_time
+        if hasattr(validated_shift, 'day'):
+            shift.day = validated_shift.day
+        if hasattr(validated_shift, 'employee_id'):
+            shift.employee_id = validated_shift.employee_id
 
+        db.session.commit()
+        result = shift_schema.dump(shift)
+        return jsonify(result)
+    except ValidationError as err:
+        return jsonify({"error": err.messages}), 400
+
+    
 @app.delete('/shifts/<int:shift_id>')
 def delete_shift(shift_id):
     shift = db.session.get(Shift, shift_id)

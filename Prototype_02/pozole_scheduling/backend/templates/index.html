@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scheduling App</title>
+    <style>
+        body { font-family: sans-serif; }
+        nav { margin-bottom: 20px; }
+        nav a { margin-right: 10px; padding: 5px 10px; border: 1px solid #ccc; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <h1>Scheduling Application Prototype</h1>
+    <nav>
+        <a href="{{ url_for('list_employees_ui') }}">View Employees</a>
+        <a href="{{ url_for('list_shifts_ui') }}">View Shifts</a>
+        </nav>
+    <p>Welcome to the prototype of the scheduling application.</p>
+</body>
+</html>
