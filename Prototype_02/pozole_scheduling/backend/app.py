@@ -1,5 +1,6 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
+import requests 
 
 
 app = Flask(__name__)
@@ -19,28 +20,107 @@ employees_schema = EmployeeSchema(many=True)
 shift_schema = ShiftSchema()
 shifts_schema = ShiftSchema(many=True)
 
+API_BASE_URL = 'http://127.0.0.1:5000'
+
 # UI
 @app.route('/')
 def index():
     return render_template('index.html')
 
+# UI EMPLOYEES
+
 @app.route('/employees_ui')
 def list_employees_ui():
-    employees = get_employees_data()  # Use a helper function to get employee data
+    employees = get_employees_data()  
     return render_template('employees.html', employees=employees)
 
-@app.route('/shifts_ui')
-def list_shifts_ui():
-    shifts = get_shifts_data()  # Use a helper function to get shift data
-    return render_template('shifts.html', shifts=shifts)
+@app.route('/employees_ui/create')
+def create_employee_ui():
+    return render_template('create_employee.html')
 
 def get_employees_data():
     all_employees = db.session.query(Employee).all()
     return employees_schema.dump(all_employees)
 
+@app.post('/employees_ui/submit_employee')
+def submit_employee():
+    if request.method == 'POST':
+        name = request.form['name']
+        role = request.form['role']
+        availability = {
+            'monday': request.form['monday'],
+            'tuesday': request.form['tuesday'],
+            'wednesday': request.form['wednesday'],
+            'thursday': request.form['thursday'],
+            'friday': request.form['friday'],
+            'saturday': request.form['saturday'],
+            'sunday': request.form['sunday']
+        }
+
+        availability = {day: times for day, times in availability.items() if times}
+
+        employee_data = {
+            'name': name,
+            'role': role,
+            'availability': availability
+        }
+
+        try:
+            response = requests.post(f'{API_BASE_URL}/employees', json=employee_data)
+            response.raise_for_status()
+            return redirect(url_for('list_employees_ui'))  
+        
+        except requests.exceptions.RequestException as e:
+            error_message = f"Error creating employee: {e}"
+            if response.status_code == 400 and response.headers.get('Content-Type') == 'application/json':
+                error_data = response.json()
+                if 'error' in error_data:
+                    error_message = f"Error creating employee: {error_data['error']}"
+            return render_template('create_employee.html', error=error_message)
+
+# UI SHIFTS
+
+@app.route('/shifts_ui')
+def list_shifts_ui():
+    shifts = get_shifts_data()  
+    return render_template('shifts.html', shifts=shifts)
+
+@app.route('/shifts_ui/create')
+def create_shift_ui():
+    return render_template('create_shift.html')
+
 def get_shifts_data():
     all_shifts = db.session.query(Shift).all()
     return shifts_schema.dump(all_shifts)
+
+@app.post('/shifts_ui/submit_shift')
+def submit_shift():
+    if request.method == 'POST':
+        start_time = request.form['start_time']
+        end_time = request.form['end_time']
+        day = request.form['day']
+        employee_id = request.form.get('employee_id')  
+        shift_data = {
+            'start_time': start_time,
+            'end_time': end_time,
+            'day': day
+        }
+        if employee_id:
+            shift_data['employee_id'] = int(employee_id)
+
+        try:
+            response = requests.post(f'{API_BASE_URL}/shifts', json=shift_data)
+            response.raise_for_status()
+            return redirect(url_for('list_shifts_ui'))  
+        
+        except requests.exceptions.RequestException as e:
+            error_message = f"Error creating shift: {e}"
+            if response.status_code == 400 and response.headers.get('Content-Type') == 'application/json':
+                error_data = response.json()
+                if 'error' in error_data:
+                    error_message = f"Error creating shift: {error_data['error']}"
+            return render_template('create_shift.html', error=error_message)
+
 
 # EMPLOYEES
 

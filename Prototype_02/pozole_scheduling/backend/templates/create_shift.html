@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Shift</title>
+    <style>
+        body { font-family: sans-serif; }
+        form { width: 80%; margin: 20px auto; padding: 20px; border: 1px solid #ccc; }
+        label { display: block; margin-bottom: 5px; }
+        input[type="time"], select { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; box-sizing: border-box; }
+        select { height: 30px; }
+        button[type="submit"] { background-color: #4CAF50; color: white; padding: 10px 15px; border: none; cursor: pointer; }
+        button[type="submit"]:hover { background-color: #45a049; }
+        a { text-decoration: none; margin-top: 10px; display: block; }
+        .error { color: red; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Create New Shift</h1>
+
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+
+    <form action="{{ url_for('submit_shift') }}" method="post">
+        <label for="start_time">Start Time:</label>
+        <input type="time" id="start_time" name="start_time" required>
+
+        <label for="end_time">End Time:</label>
+        <input type="time" id="end_time" name="end_time" required>
+
+        <label for="day">Day:</label>
+        <select id="day" name="day" required>
+            <option value="Monday">Monday</option>
+            <option value="Tuesday">Tuesday</option>
+            <option value="Wednesday">Wednesday</option>
+            <option value="Thursday">Thursday</option>
+            <option value="Friday">Friday</option>
+            <option value="Saturday">Saturday</option>
+            <option value="Sunday">Sunday</option>
+        </select>
+
+        <label for="employee_id">Assign Employee (Optional):</label>
+        <input type="number" id="employee_id" name="employee_id" placeholder="Enter Employee ID">
+
+        <button type="submit">Create Shift</button>
+    </form>
+
+    <a href="{{ url_for('list_shifts_ui') }}">Back to Shift List</a>
+</body>
+</html>
