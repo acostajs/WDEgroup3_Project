@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Employee</title>
+    <style>
+        body { font-family: sans-serif; }
+        form { width: 80%; margin: 20px auto; padding: 20px; border: 1px solid #ccc; }
+        label { display: block; margin-bottom: 5px; }
+        input[type="text"], select { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; box-sizing: border-box; }
+        select { height: 30px; }
+        button[type="submit"] { background-color: #007bff; color: white; padding: 10px 15px; border: none; cursor: pointer; }
+        button[type="submit"]:hover { background-color: #0056b3; }
+        a { text-decoration: none; margin-top: 10px; display: block; }
+        .error { color: red; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Edit Employee</h1>
+
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+
+    <form action="{{ url_for('update_employee_ui', employee_id=employee.id) }}" method="post">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" value="{{ employee.name }}" required>
+
+        <label for="role">Role:</label>
+        <input type="text" id="role" name="role" value="{{ employee.role }}" required>
+
+        <label>Availability:</label>
+        <label for="monday">Monday:</label>
+        <input type="text" id="monday" name="monday" value="{{ employee.availability.get('monday', '') }}">
+
+        <label for="tuesday">Tuesday:</label>
+        <input type="text" id="tuesday" name="tuesday" value="{{ employee.availability.get('tuesday', '') }}">
+
+        <label for="wednesday">Wednesday:</label>
+        <input type="text" id="wednesday" name="wednesday" value="{{ employee.availability.get('wednesday', '') }}">
+
+        <label for="thursday">Thursday:</label>
+        <input type="text" id="thursday" name="thursday" value="{{ employee.availability.get('thursday', '') }}">
+
+        <label for="friday">Friday:</label>
+        <input type="text" id="friday" name="friday" value="{{ employee.availability.get('friday', '') }}">
+
+        <label for="saturday">Saturday:</label>
+        <input type="text" id="saturday" name="saturday" value="{{ employee.availability.get('saturday', '') }}">
+
+        <label for="sunday">Sunday:</label>
+        <input type="text" id="sunday" name="sunday" value="{{ employee.availability.get('sunday', '') }}">
+
+        <button type="submit">Update Employee</button>
+    </form>
+
+    <a href="{{ url_for('employee_detail_ui', employee_id=employee.id) }}">Back to Employee Details</a>
+    <a href="{{ url_for('list_employees_ui') }}">Back to Employee List</a>
+</body>
+</html>

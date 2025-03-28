@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Shift</title>
+    <style>
+        body { font-family: sans-serif; }
+        form { width: 80%; margin: 20px auto; padding: 20px; border: 1px solid #ccc; }
+        label { display: block; margin-bottom: 5px; }
+        input[type="time"], select { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; box-sizing: border-box; }
+        select { height: 30px; }
+        button[type="submit"] { background-color: #007bff; color: white; padding: 10px 15px; border: none; cursor: pointer; }
+        button[type="submit"]:hover { background-color: #0056b3; }
+        a { text-decoration: none; margin-top: 10px; display: block; }
+        .error { color: red; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Edit Shift</h1>
+
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+
+    <form action="{{ url_for('update_shift_ui', shift_id=shift.id) }}" method="post">
+        <label for="start_time">Start Time:</label>
+        <input type="time" id="start_time" name="start_time" value="{{ shift.start_time }}" required>
+
+        <label for="end_time">End Time:</label>
+        <input type="time" id="end_time" name="end_time" value="{{ shift.end_time }}" required>
+
+        <label for="day">Day:</label>
+        <select id="day" name="day" required>
+            <option value="Monday" {% if shift.day == 'Monday' %}selected{% endif %}>Monday</option>
+            <option value="Tuesday" {% if shift.day == 'Tuesday' %}selected{% endif %}>Tuesday</option>
+            <option value="Wednesday" {% if shift.day == 'Wednesday' %}selected{% endif %}>Wednesday</option>
+            <option value="Thursday" {% if shift.day == 'Thursday' %}selected{% endif %}>Thursday</option>
+            <option value="Friday" {% if shift.day == 'Friday' %}selected{% endif %}>Friday</option>
+            <option value="Saturday" {% if shift.day == 'Saturday' %}selected{% endif %}>Saturday</option>
+            <option value="Sunday" {% if shift.day == 'Sunday' %}selected{% endif %}>Sunday</option>
+        </select>
+
+        <label for="employee_id">Assign Employee (Optional):</label>
+        <input type="number" id="employee_id" name="employee_id" value="{{ shift.employee_id }}">
+
+        <button type="submit">Update Shift</button>
+    </form>
+
+    <a href="{{ url_for('shift_detail_ui', shift_id=shift.id) }}">Back to Shift Details</a>
+    <a href="{{ url_for('list_shifts_ui') }}">Back to Shift List</a>
+</body>
+</html>

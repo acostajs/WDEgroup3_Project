@@ -31,7 +31,9 @@
             {% for employee in employees %}
             <tr>
                 <td>{{ employee.id }}</td>
-                <td>{{ employee.name }}</td>
+                <td>
+                    <a href="{{ url_for('employee_detail_ui', employee_id=employee.id) }}">{{ employee.name }}</a>
+                </td>
                 <td>{{ employee.role }}</td>
                 <td>
                     {% if employee.availability %}

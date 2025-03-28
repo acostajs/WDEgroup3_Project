@@ -77,6 +77,66 @@ def submit_employee():
                 if 'error' in error_data:
                     error_message = f"Error creating employee: {error_data['error']}"
             return render_template('create_employee.html', error=error_message)
+        
+@app.route('/employees_ui/<int:employee_id>')
+def employee_detail_ui(employee_id):
+    try:
+        response = requests.get(f'{API_BASE_URL}/employees/{employee_id}')
+        response.raise_for_status()  # Raise an exception for bad status codes
+        employee = response.json()
+        return render_template('employee_detail.html', employee=employee)
+    except requests.exceptions.RequestException as e:
+        error_message = f"Error fetching employee details: {e}"
+        return render_template('error.html', error=error_message, back_url=url_for('list_employees_ui'))
+    
+@app.post('/employees_ui/update_employee/<int:employee_id>')
+def update_employee_ui(employee_id):
+    if request.method == 'POST':
+        name = request.form['name']
+        role = request.form['role']
+        availability = {
+            'monday': request.form['monday'],
+            'tuesday': request.form['tuesday'],
+            'wednesday': request.form['wednesday'],
+            'thursday': request.form['thursday'],
+            'friday': request.form['friday'],
+            'saturday': request.form['saturday'],
+            'sunday': request.form['sunday']
+        }
+
+        # Filter out days with empty availability
+        availability = {day: times for day, times in availability.items() if times}
+
+        employee_data = {
+            'name': name,
+            'role': role,
+            'availability': availability
+        }
+
+        try:
+            response = requests.put(f'{API_BASE_URL}/employees/{employee_id}', json=employee_data)
+            response.raise_for_status()
+            return redirect(url_for('employee_detail_ui', employee_id=employee_id)) # Redirect to details on success
+        except requests.exceptions.RequestException as e:
+            error_message = f"Error updating employee: {e}"
+            if response.status_code == 400 and response.headers.get('Content-Type') == 'application/json':
+                error_data = response.json()
+                if 'error' in error_data:
+                    error_message = f"Error updating employee: {error_data['error']}"
+            # Re-render the edit form with the error message
+            return render_template('edit_employee.html', employee=employee_data, error=error_message)
+        
+@app.post('/employees_ui/delete_employee/<int:employee_id>')
+def delete_employee_ui(employee_id):
+    try:
+        response = requests.delete(f'{API_BASE_URL}/employees/{employee_id}')
+        response.raise_for_status()
+        return redirect(url_for('list_employees_ui'))
+    except requests.exceptions.RequestException as e:
+        error_message = f"Error deleting employee: {e}"
+        # Optionally, you could redirect back to the detail page with an error message
+        return render_template('error.html', error=error_message, back_url=url_for('employee_detail_ui', employee_id=employee_id))
+
 
 # UI SHIFTS
 
@@ -120,7 +180,87 @@ def submit_shift():
                 if 'error' in error_data:
                     error_message = f"Error creating shift: {error_data['error']}"
             return render_template('create_shift.html', error=error_message)
+        
+@app.route('/shifts_ui/<int:shift_id>')
+def shift_detail_ui(shift_id):
+    try:
+        response = requests.get(f'{API_BASE_URL}/shifts/{shift_id}')
+        response.raise_for_status()  # Raise an exception for bad status codes
+        shift = response.json()
+        return render_template('shift_detail.html', shift=shift)
+    except requests.exceptions.RequestException as e:
+        error_message = f"Error fetching shift details: {e}"
+        return render_template('error.html', error=error_message, back_url=url_for('list_shifts_ui'))
+    
+@app.route('/employees_ui/edit/<int:employee_id>')
+def edit_employee_ui(employee_id):
+    try:
+        response = requests.get(f'{API_BASE_URL}/employees/{employee_id}')
+        response.raise_for_status()
+        employee = response.json()
+        return render_template('edit_employee.html', employee=employee)
+    except requests.exceptions.RequestException as e:
+        error_message = f"Error fetching employee data for editing: {e}"
+        return render_template('error.html', error=error_message, back_url=url_for('list_employees_ui'))
+    
+@app.route('/shifts_ui/edit/<int:shift_id>')
+def edit_shift_ui(shift_id):
+    try:
+        response = requests.get(f'{API_BASE_URL}/shifts/{shift_id}')
+        response.raise_for_status()
+        shift = response.json()
+        return render_template('edit_shift.html', shift=shift)
+    except requests.exceptions.RequestException as e:
+        error_message = f"Error fetching shift data for editing: {e}"
+        return render_template('error.html', error=error_message, back_url=url_for('list_shifts_ui'))    
 
+@app.post('/shifts_ui/update_shift/<int:shift_id>')
+def update_shift_ui(shift_id):
+    if request.method == 'POST':
+        start_time = request.form['start_time']
+        end_time = request.form['end_time']
+        day = request.form['day']
+        employee_id = request.form.get('employee_id')  # 
+
+        shift_data = {
+            'start_time': start_time,
+            'end_time': end_time,
+            'day': day
+        }
+        if employee_id:
+            shift_data['employee_id'] = int(employee_id)
+
+        try:
+            response = requests.put(f'{API_BASE_URL}/shifts/{shift_id}', json=shift_data)
+            response.raise_for_status()
+            return redirect(url_for('shift_detail_ui', shift_id=shift_id)) 
+        
+        except requests.exceptions.RequestException as e:
+            error_message = f"Error updating shift: {e}"
+            if response.status_code == 400 and response.headers.get('Content-Type') == 'application/json':
+                error_data = response.json()
+                if 'error' in error_data:
+                    error_message = f"Error updating shift: {error_data['error']}"
+            
+            try:
+                response = requests.get(f'{API_BASE_URL}/shifts/{shift_id}')
+                response.raise_for_status()
+                shift = response.json()
+                return render_template('edit_shift.html', shift=shift, error=error_message)
+            except requests.exceptions.RequestException as fetch_error:
+                error_message = f"Error updating shift: {error_message}. Additionally, error fetching shift data for re-rendering: {fetch_error}"
+                return render_template('error.html', error=error_message, back_url=url_for('list_shifts_ui'))
+            
+@app.post('/shifts_ui/delete_shift/<int:shift_id>')
+def delete_shift_ui(shift_id):
+    try:
+        response = requests.delete(f'{API_BASE_URL}/shifts/{shift_id}')
+        response.raise_for_status()
+        return redirect(url_for('list_shifts_ui'))
+    except requests.exceptions.RequestException as e:
+        error_message = f"Error deleting shift: {e}"
+        # Optionally, you could redirect back to the detail page with an error message
+        return render_template('error.html', error=error_message, back_url=url_for('shift_detail_ui', shift_id=shift_id))
 
 # EMPLOYEES
 

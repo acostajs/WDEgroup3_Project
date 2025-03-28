@@ -32,7 +32,9 @@
             {% for shift in shifts %}
             <tr>
                 <td>{{ shift.id }}</td>
-                <td>{{ shift.start_time }}</td>
+                <td>
+                    <a href="{{ url_for('shift_detail_ui', shift_id=shift.id) }}">{{ shift.start_time }}</a>
+                </td>
                 <td>{{ shift.end_time }}</td>
                 <td>{{ shift.day }}</td>
                 <td>{{ shift.employee_id }}</td>
