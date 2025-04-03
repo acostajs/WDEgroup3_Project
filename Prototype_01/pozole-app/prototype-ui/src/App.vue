@@ -1,13 +1,13 @@
 <template>
   <header>
     <nav>
-      <RouterLink to="/employees">Employees</RouterLink>
-      <RouterLink to="/schedules">Schedules</RouterLink>
-      <RouterLink to="/performances">Performances</RouterLink>
+      <router-link to="/employees">Employees</router-link>
+      <router-link to="/schedules">Schedules</router-link>
+      <router-link to="/performances">Performances</router-link>
     </nav>
   </header>
 
-  <RouterView />
+  <router-view />
 </template>
 
 <script setup lang="ts">
