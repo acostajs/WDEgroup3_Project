@@ -1,6 +1,6 @@
 from marshmallow_sqlalchemy import SQLAlchemySchema, auto_field
 from backend.models.models import Employee, Shift
-from marshmallow import ValidationError, validates
+from marshmallow import ValidationError, validates, fields
 
 class EmployeeSchema(SQLAlchemySchema):
     class Meta:
@@ -32,3 +32,10 @@ class ShiftSchema(SQLAlchemySchema):
     def validate_day(self, value):
         if value is None:
             raise ValidationError("Day cannot be null.")
+
+    @validates("start_time")
+    def validate_start_time_before_end_time(self, start_time):
+        end_time = self.context.get("end_time")
+        if start_time and end_time:
+            if start_time >= end_time:
+                raise ValidationError("Start time must be before end time.")

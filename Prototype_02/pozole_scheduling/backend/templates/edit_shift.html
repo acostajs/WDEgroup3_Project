@@ -14,6 +14,7 @@
         button[type="submit"]:hover { background-color: #0056b3; }
         a { text-decoration: none; margin-top: 10px; display: block; }
         .error { color: red; margin-top: 10px; }
+        .field-error { color: red; font-size: 0.9em; margin-top: 2px; }
     </style>
 </head>
 <body>
@@ -26,9 +27,15 @@
     <form action="{{ url_for('update_shift_ui', shift_id=shift.id) }}" method="post">
         <label for="start_time">Start Time:</label>
         <input type="time" id="start_time" name="start_time" value="{{ shift.start_time }}" required>
+        {% if api_errors and 'start_time' in api_errors %}
+            <p class="field-error">{{ api_errors['start_time'][0] }}</p>
+        {% endif %}
 
         <label for="end_time">End Time:</label>
         <input type="time" id="end_time" name="end_time" value="{{ shift.end_time }}" required>
+        {% if api_errors and 'end_time' in api_errors %}
+            <p class="field-error">{{ api_errors['end_time'][0] }}</p>
+        {% endif %}
 
         <label for="day">Day:</label>
         <select id="day" name="day" required>
@@ -40,9 +47,15 @@
             <option value="Saturday" {% if shift.day == 'Saturday' %}selected{% endif %}>Saturday</option>
             <option value="Sunday" {% if shift.day == 'Sunday' %}selected{% endif %}>Sunday</option>
         </select>
+        {% if api_errors and 'day' in api_errors %}
+            <p class="field-error">{{ api_errors['day'][0] }}</p>
+        {% endif %}
 
         <label for="employee_id">Assign Employee (Optional):</label>
         <input type="number" id="employee_id" name="employee_id" value="{{ shift.employee_id }}">
+        {% if api_errors and 'employee_id' in api_errors %}
+            <p class="field-error">{{ api_errors['employee_id'][0] }}</p>
+        {% endif %}
 
         <button type="submit">Update Shift</button>
     </form>

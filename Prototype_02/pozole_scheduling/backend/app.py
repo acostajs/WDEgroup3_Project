@@ -220,7 +220,7 @@ def update_shift_ui(shift_id):
         start_time = request.form['start_time']
         end_time = request.form['end_time']
         day = request.form['day']
-        employee_id = request.form.get('employee_id')  # 
+        employee_id = request.form.get('employee_id')
 
         shift_data = {
             'start_time': start_time,
@@ -233,20 +233,22 @@ def update_shift_ui(shift_id):
         try:
             response = requests.put(f'{API_BASE_URL}/shifts/{shift_id}', json=shift_data)
             response.raise_for_status()
-            return redirect(url_for('shift_detail_ui', shift_id=shift_id)) 
-        
+            return redirect(url_for('shift_detail_ui', shift_id=shift_id))
+
         except requests.exceptions.RequestException as e:
             error_message = f"Error updating shift: {e}"
+            api_errors = None  
             if response.status_code == 400 and response.headers.get('Content-Type') == 'application/json':
                 error_data = response.json()
                 if 'error' in error_data:
-                    error_message = f"Error updating shift: {error_data['error']}"
-            
+                    api_errors = error_data['error'] 
+                    error_message = "Please correct the following errors:" 
+
             try:
                 response = requests.get(f'{API_BASE_URL}/shifts/{shift_id}')
                 response.raise_for_status()
                 shift = response.json()
-                return render_template('edit_shift.html', shift=shift, error=error_message)
+                return render_template('edit_shift.html', shift=shift, error=error_message, api_errors=api_errors)
             except requests.exceptions.RequestException as fetch_error:
                 error_message = f"Error updating shift: {error_message}. Additionally, error fetching shift data for re-rendering: {fetch_error}"
                 return render_template('error.html', error=error_message, back_url=url_for('list_shifts_ui'))
@@ -341,7 +343,7 @@ def create_shift():
         result = shift_schema.dump(validated_shift)
         return jsonify(result), 201
     except ValidationError as err:
-        return jsonify({"error": err.messages}), 400
+        return jsonify({"error": err.messages}), 400 
 
 @app.get('/shifts')
 def get_shifts():
@@ -367,23 +369,25 @@ def update_shift(shift_id):
         data = request.get_json()
         if not data:
             return jsonify({"error": "Missing JSON data"}), 400
-        validated_shift = shift_schema.load(data, session=db.session, partial=True)
 
-        if hasattr(validated_shift, 'start_time'):
-            shift.start_time = validated_shift.start_time
-        if hasattr(validated_shift, 'end_time'):
-            shift.end_time = validated_shift.end_time
-        if hasattr(validated_shift, 'day'):
-            shift.day = validated_shift.day
-        if hasattr(validated_shift, 'employee_id'):
-            shift.employee_id = validated_shift.employee_id
+        # Load the data through the schema to trigger validation
+        validated_data = shift_schema.load(data, session=db.session, partial=True)
+
+        # If validation passes, update the shift object
+        if 'start_time' in data:
+            shift.start_time = data['start_time']
+        if 'end_time' in data:
+            shift.end_time = data['end_time']
+        if 'day' in data:
+            shift.day = data['day']
+        if 'employee_id' in data:
+            shift.employee_id = data['employee_id']
 
         db.session.commit()
         result = shift_schema.dump(shift)
         return jsonify(result)
     except ValidationError as err:
         return jsonify({"error": err.messages}), 400
-
     
 @app.delete('/shifts/<int:shift_id>')
 def delete_shift(shift_id):
