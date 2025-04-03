@@ -1,29 +1,37 @@
-import express, { Request, Response } from 'express';
-import employeesRouter from './employeesRoutes';
-import schedulesRouter from './schedulesRoutes';
-import performancesRouter from './performancesRoutes';
-import cors from 'cors';
-import { connectDB } from './database/db';
+import express, { Request, Response } from 'express'; // Import Express
+import employeesRouter from './employeesRoutes'; // Import Employee routes
+import schedulesRouter from './schedulesRoutes'; // Import Schedule routes
+import performancesRouter from './performancesRoutes'; // Import Performance routes
+import cors from 'cors'; // Import CORS middleware
+import { connectDB } from './database/db'; // Import database connection function
 
-const app = express();
-const port = process.env.PORT || 3000;
+const app = express(); // Create an Express application
+const port = process.env.PORT || 3000; // Define the port
 
-app.use(cors());
-app.use(express.json());
+// Middleware:
+app.use(cors()); // Enable CORS
+app.use(express.json()); // Parse JSON request bodies
 
+// Function to start the server:
 async function startServer() {
   try {
+    // Connect to the database:
     await connectDB();
-    app.use('/employees', employeesRouter);
-    app.use('/schedules', schedulesRouter);
-    app.use('/performances', performancesRouter);
 
+    // Set up routes:
+    app.use('/employees', employeesRouter); // Use employee routes
+    app.use('/schedules', schedulesRouter); // Use schedule routes
+    app.use('/performances', performancesRouter); // Use performance routes
+
+    // Start the server:
     app.listen(port, () => {
       console.log(`Server listening at http://localhost:${port}`);
     });
   } catch (error) {
+    // Handle database connection errors:
     console.error('Failed to start server due to database connection error:', error);
   }
 }
 
+// Start the server:
 startServer();
