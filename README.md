@@ -18,11 +18,11 @@ Manual scheduling leads to inefficiencies, such as overstaffing during slow peri
 
 ## Technology Stack
 ### Option 1:
-- **Front-end:** 
-- **Back-end:** 
-- **Database:** 
-- **Hosting:** 
-- **Authentication:** 
+- **Front-end: Vue.js
+- **Back-end: Typescript with Node.js
+- **Database: MariaDB
+- **Hosting: Still to decide
+- **Authentication: Still to Decide
 
 ### Option 2:
 - **Front-end:** Jinja2
@@ -30,23 +30,6 @@ Manual scheduling leads to inefficiencies, such as overstaffing during slow peri
 - **Database:** SQLite
 - **Hosting:** Still to decide
 - **Authentication:** Still to decide
-
-## Work Plan
-1. **Define Requirements:** Identify the essential features for scheduling and performance tracking.
-2. **Choose Technology Stack:** Decide which of the free full-stack options best suits the project.
-3. **Set Up Development Environment:** Configure hosting, database, and authentication services.
-4. **Develop Scheduling System:** Build an interface for assigning shifts and storing schedules.
-5. **Implement Performance Tracking:** Create dashboards to monitor employee efficiency and attendance.
-6. **Integrate Payroll & Notifications:** Ensure accurate labor cost tracking and automate shift updates.
-7. **Test & Optimize:** Run tests with sample data, fix issues, and refine the system based on feedback.
-8. **Deploy & Gather Feedback:** Release the prototype, collect insights from managers and employees, and make improvements.
-
-## Testing & Evaluation
-Success will be measured by:
-- Accuracy of automated scheduling.
-- Reduction in last-minute shift changes.
-- Improved labor cost management.
-- Feedback from managers and employees.
 
 This system aims to automate scheduling and improve efficiency, ensuring that the right employees work at the right times while optimizing labor costs.
 
