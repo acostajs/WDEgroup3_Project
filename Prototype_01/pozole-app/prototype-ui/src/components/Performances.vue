@@ -5,7 +5,11 @@
       <div v-if="isEditing">
         <h2>Edit Performance</h2>
         <form @submit.prevent="updatePerformance">
-          <input type="number" v-model="editPerformance.employeeId" placeholder="Employee ID" />
+          <select v-model="editPerformance.employeeId">
+            <option v-for="employee in employees" :key="employee.id" :value="employee.id">
+              {{ employee.firstName }} {{ employee.lastName }} (ID: {{ employee.id }})
+            </option>
+          </select>
           <input type="date" v-model="editPerformance.performanceDate" placeholder="Performance Date" />
           <input type="number" v-model="editPerformance.performanceRating" placeholder="Performance Rating" />
           <textarea v-model="editPerformance.performanceComment" placeholder="Performance Comment"></textarea>
@@ -17,7 +21,11 @@
       <div v-else>
         <h2>Create Performance</h2>
         <form @submit.prevent="createPerformance">
-          <input type="number" v-model="newPerformance.employeeId" placeholder="Employee ID" />
+          <select v-model="newPerformance.employeeId">
+            <option v-for="employee in employees" :key="employee.id" :value="employee.id">
+              {{ employee.firstName }} {{ employee.lastName }} (ID: {{ employee.id }})
+            </option>
+          </select>
           <input type="date" v-model="newPerformance.performanceDate" placeholder="Performance Date" />
           <input type="number" v-model="newPerformance.performanceRating" placeholder="Performance Rating" />
           <textarea v-model="newPerformance.performanceComment" placeholder="Performance Comment"></textarea>
@@ -72,6 +80,7 @@
     performanceComment: '',
   });
   const isEditing = ref(false);
+  const employees = ref([]);
   
   const fetchPerformances = async () => {
     try {
@@ -117,5 +126,17 @@
     }
   };
   
-  onMounted(fetchPerformances);
+  onMounted(async () => {
+    await fetchPerformances();
+    await fetchEmployees();
+  });
+  
+  const fetchEmployees = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/employees');
+      employees.value = response.data;
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+    }
+  };
   </script>
