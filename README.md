@@ -18,18 +18,18 @@ Manual scheduling leads to inefficiencies, such as overstaffing during slow peri
 
 ## Technology Stack
 ### Option 1:
-- **Front-end:** Vanilla TypeScript + HTML/CSS or Vue.js
-- **Back-end:** Node.js with Express (TypeScript)
-- **Database:** MongoDB Atlas (free tier) or MySQL (AWS free tier)
-- **Hosting:** Render (back-end), Vercel/Netlify (front-end)
-- **Authentication:** Firebase Auth/Auth0 (optional, free tier)
+- **Front-end:** 
+- **Back-end:** 
+- **Database:** 
+- **Hosting:** 
+- **Authentication:** 
 
 ### Option 2:
-- **Front-end:** React.js with Tailwind CSS
-- **Back-end:** Python with Django
-- **Database:** PostgreSQL (free tier on Supabase)
-- **Hosting:** Railway (back-end), Cloudflare Pages (front-end)
-- **Authentication:** Supabase Auth (free tier)
+- **Front-end:** Jinja2
+- **Back-end:** Python with flask
+- **Database:** SQLite
+- **Hosting:** Still to decide
+- **Authentication:** Still to decide
 
 ## Work Plan
 1. **Define Requirements:** Identify the essential features for scheduling and performance tracking.
