@@ -1,18 +1,22 @@
 import express, { Request, Response } from 'express';
 import { getPool } from './database/db';
 import { Employee, CreateEmployeeRequest } from './types';
-import { RowDataPacket, ResultSetHeader } from 'mysql2'; // Import necessary types
+import { RowDataPacket, ResultSetHeader } from 'mysql2';
 
 const employeesRouter = express.Router();
 
 employeesRouter.get('/', async (req: Request, res: Response) => {
   console.log('GET /employees route hit (employeesRoutes)');
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const offset = (page - 1) * limit;
+
   try {
     const pool = await getPool();
     if (!pool) {
       return res.status(500).json({ error: 'Database connection failed' });
     }
-    const [rows] = await pool.execute<RowDataPacket[]>('SELECT id, firstName, lastName, email, phone, hireDate FROM employees');
+    const [rows] = await pool.execute<RowDataPacket[]>('SELECT id, firstName, lastName, email, phone, hireDate FROM employees LIMIT ? OFFSET ?', [limit, offset]);
     res.json(rows);
   } catch (err: any) {
     console.error('Error getting employees:', err);
@@ -43,6 +47,28 @@ employeesRouter.get('/:id', async (req: Request, res: Response) => {
 employeesRouter.post('/', async (req: Request, res: Response) => {
   console.log('POST /employees route hit (employeesRoutes)');
   const { firstName, lastName, email, phone, hireDate } = req.body as CreateEmployeeRequest;
+
+  if (!firstName || !lastName || !email || !phone || !hireDate) {
+    return res.status(400).json({ error: 'First name, last name, email, phone, and hire date are required.' });
+  }
+
+  // Email Validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: 'Invalid email format.' });
+  }
+
+  // Phone Validation (Basic example, adjust as needed)
+  const phoneRegex = /^\d{10}$/; // 10-digit phone number
+  if (!phoneRegex.test(phone)) {
+    return res.status(400).json({ error: 'Invalid phone number format.' });
+  }
+
+  // Hire Date Validation (Basic example, adjust as needed)
+  if (!Date.parse(hireDate)) {
+    return res.status(400).json({ error: 'Invalid hire date format.' });
+  }
+
   try {
     const pool = await getPool();
     if (!pool) {
@@ -59,6 +85,28 @@ employeesRouter.post('/', async (req: Request, res: Response) => {
 employeesRouter.put('/:id', async (req: Request, res: Response) => {
   const id = req.params.id;
   const { firstName, lastName, email, phone, hireDate } = req.body as CreateEmployeeRequest;
+
+  if (!firstName || !lastName || !email || !phone || !hireDate) {
+    return res.status(400).json({ error: 'First name, last name, email, phone, and hire date are required.' });
+  }
+
+  // Email Validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: 'Invalid email format.' });
+  }
+
+  // Phone Validation (Basic example, adjust as needed)
+  const phoneRegex = /^\d{10}$/; // 10-digit phone number
+  if (!phoneRegex.test(phone)) {
+    return res.status(400).json({ error: 'Invalid phone number format.' });
+  }
+
+  // Hire Date Validation (Basic example, adjust as needed)
+  if (!Date.parse(hireDate)) {
+    return res.status(400).json({ error: 'Invalid hire date format.' });
+  }
+
   console.log(`PUT /employees/${id} route hit (employeesRoutes)`);
   try {
     const pool = await getPool();
