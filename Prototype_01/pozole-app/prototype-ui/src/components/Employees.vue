@@ -9,6 +9,14 @@
 		{{ errorMessage }}
 	  </div>
   
+	  <div class="filter-section">
+		<input type="number" v-model="filters.id" placeholder="Filter by ID" @input="applyFilters" />
+		<input type="text" v-model="filters.firstName" placeholder="Filter by First Name" @input="applyFilters" />
+		<input type="text" v-model="filters.lastName" placeholder="Filter by Last Name" @input="applyFilters" />
+		<input type="email" v-model="filters.email" placeholder="Filter by Email" @input="applyFilters" />
+		<button @click="resetFilters">Reset Filters</button>
+	  </div>
+  
 	  <div v-if="isLoading">Loading...</div>
   
 	  <div v-if="isEditing && !isLoading">
@@ -36,15 +44,15 @@
 		</form>
 	  </div>
   
-	  <table v-if="!isLoading">
+	  <table v-if="!isLoading && employees.length > 0">
 		<thead>
 		  <tr>
-			<th>ID</th>
-			<th>First Name</th>
-			<th>Last Name</th>
-			<th>Email</th>
-			<th>Phone</th>
-			<th>Hire Date</th>
+			<th @click="handleSort('id')" :class="{ active: sortColumn === 'id' }">ID <span v-if="sortColumn === 'id'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span></th>
+			<th @click="handleSort('firstName')" :class="{ active: sortColumn === 'firstName' }">First Name <span v-if="sortColumn === 'firstName'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span></th>
+			<th @click="handleSort('lastName')" :class="{ active: sortColumn === 'lastName' }">Last Name <span v-if="sortColumn === 'lastName'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span></th>
+			<th @click="handleSort('email')" :class="{ active: sortColumn === 'email' }">Email <span v-if="sortColumn === 'email'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span></th>
+			<th @click="handleSort('phone')" :class="{ active: sortColumn === 'phone' }">Phone <span v-if="sortColumn === 'phone'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span></th>
+			<th @click="handleSort('hireDate')" :class="{ active: sortColumn === 'hireDate' }">Hire Date <span v-if="sortColumn === 'hireDate'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span></th>
 			<th>Actions</th>
 		  </tr>
 		</thead>
@@ -64,17 +72,38 @@
 		</tbody>
 	  </table>
   
-	  <div v-if="!isLoading" class="pagination">
+	  <div v-if="!isLoading && employees.length > 0" class="pagination">
 		<button :disabled="currentPage === 1" @click="prevPage">Previous</button>
 		<span>Page {{ currentPage }}</span>
 		<button :disabled="employees.length < pageSize" @click="nextPage">Next</button>
+	  </div>
+	  <div v-else-if="!isLoading && filters.id && employees.length === 0" class="no-results">
+		No employees found with ID: {{ filters.id }}
+	  </div>
+	  <div v-else-if="!isLoading && filters.firstName && employees.length === 0" class="no-results">
+		No employees found with First Name containing: {{ filters.firstName }}
+	  </div>
+	  <div v-else-if="!isLoading && filters.lastName && employees.length === 0" class="no-results">
+		No employees found with Last Name containing: {{ filters.lastName }}
+	  </div>
+	  <div v-else-if="!isLoading && filters.email && employees.length === 0" class="no-results">
+		No employees found with Email containing: {{ filters.email }}
+	  </div>
+	  <div v-else-if="!isLoading && Object.values(filters).some(val => val) && !employees.length" class="no-results">
+		No employees found matching the current filters.
+	  </div>
+	  <div v-else-if="!isLoading && !employees.length && !Object.values(filters).some(val => val)" class="no-results">
+		No employees available.
+	  </div>
+	  <div v-else-if="!isLoading && !employees.length && Object.values(filters).some(val => val)" class="no-results">
+		No employees found matching the current filters.
 	  </div>
 	</div>
   </template>
   
   <script setup lang="ts">
   import axios from 'axios';
-  import { ref, onMounted } from 'vue';
+  import { ref, onMounted, watch } from 'vue';
   
   const employees = ref([]);
   const newEmployee = ref({
@@ -99,13 +128,35 @@
   const isLoading = ref(false);
   
   const currentPage = ref(1);
-  const pageSize = ref(10); // Adjust as needed
+  const pageSize = ref(10);
+  const filters = ref({
+	id: '',
+	firstName: '',
+	lastName: '',
+	email: '',
+  });
+  
+  const sortColumn = ref('');
+  const sortDirection = ref<'asc' | 'desc'>('asc');
   
   const fetchEmployees = async () => {
 	isLoading.value = true;
 	try {
-	  const response = await axios.get(`http://localhost:3000/employees?page=${currentPage.value}&limit=${pageSize.value}`);
-	  employees.value = response.data;
+	  const response = await axios.get('http://localhost:3000/employees', {
+		params: {
+		  page: currentPage.value,
+		  limit: pageSize.value,
+		  id: filters.value.id || undefined,
+		  firstName: filters.value.firstName || undefined,
+		  lastName: filters.value.lastName || undefined,
+		  email: filters.value.email || undefined,
+		  sortBy: sortColumn.value || undefined,
+		  sortOrder: sortDirection.value || undefined,
+		},
+	  });
+	  employees.value = response.data.employees;
+	  // Assuming your back-end returns { employees: [], totalPages: ..., currentPage: ... }
+	  // You might need to adjust this based on your actual back-end response structure
 	} catch (error) {
 	  console.error('Error fetching employees:', error);
 	  errorMessage.value = 'Failed to fetch employees.';
@@ -182,9 +233,33 @@
 	}
   };
   
+  const applyFilters = () => {
+	currentPage.value = 1;
+	fetchEmployees();
+  };
+  
+  const resetFilters = () => {
+	filters.value = { id: '', firstName: '', lastName: '', email: '' };
+	currentPage.value = 1;
+	fetchEmployees();
+  };
+  
+  const handleSort = (column: string) => {
+	if (sortColumn.value === column) {
+	  sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
+	} else {
+	  sortColumn.value = column;
+	  sortDirection.value = 'asc';
+	}
+	currentPage.value = 1; // Reset to the first page on sorting
+	fetchEmployees();
+  };
+  
   onMounted(async () => {
 	await fetchEmployees();
   });
+  
+  watch([currentPage, filters, sortColumn, sortDirection], fetchEmployees);
   </script>
   
   <style scoped>
@@ -198,6 +273,13 @@
 	margin-bottom: 10px;
   }
   
+  .filter-section {
+	margin-bottom: 15px;
+	display: flex;
+	gap: 10px;
+	align-items: center;
+  }
+  
   .pagination {
 	margin-top: 10px;
 	display: flex;
@@ -207,5 +289,20 @@
   
   .pagination button {
 	margin: 0 5px;
+  }
+  
+  .no-results {
+	margin-top: 15px;
+	font-style: italic;
+	color: #777;
+  }
+  
+  th {
+	cursor: pointer;
+	user-select: none; /* Prevent text selection on click */
+  }
+  
+  th.active {
+	font-weight: bold;
   }
   </style>

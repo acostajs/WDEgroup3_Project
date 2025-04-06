@@ -6,11 +6,28 @@ import { RowDataPacket, ResultSetHeader } from 'mysql2';
 const performancesRouter = express.Router();
 
 performancesRouter.get('/', async (req: Request, res: Response) => {
-  console.log('GET /performances route hit (performancesRoutes)');
+  console.log('GET /performances route hit (performancesRoutes) with query:', req.query);
 
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 10;
   const offset = (page - 1) * limit;
+
+  const { employeeId, performanceDate } = req.query;
+
+  let whereClauses = [];
+  const queryParams: any[] = [];
+
+  if (employeeId) {
+    whereClauses.push('employeeId = ?');
+    queryParams.push(parseInt(employeeId as string));
+  }
+  if (performanceDate) {
+    whereClauses.push('performanceDate = ?');
+    queryParams.push(performanceDate as string);
+  }
+
+  const whereString = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
+  const limitOffsetString = 'LIMIT ? OFFSET ?';
 
   try {
     const pool = await getPool();
@@ -18,17 +35,18 @@ performancesRouter.get('/', async (req: Request, res: Response) => {
       return res.status(500).json({ error: 'Database connection failed' });
     }
 
-    // Fetch paginated performances
+    // Fetch paginated and filtered performances
     const [rows] = await pool.execute<RowDataPacket[]>(
-      'SELECT id, employeeId, performanceDate, performanceRating, performanceComment FROM performances LIMIT ? OFFSET ?',
-      [limit, offset]
+      `SELECT id, employeeId, performanceDate, performanceRating, performanceComment FROM performances ${whereString} ORDER BY performanceDate DESC ${limitOffsetString}`,
+      [...queryParams, limit, offset]
     );
 
-    // Fetch total count of performances
-    const [countRows] = await pool.execute<RowDataPacket[]>('SELECT COUNT(*) as total FROM performances');
-    const total = countRows[0].total;
-
-    console.log('Total Records:', total); // Debugging: Check the total count
+    // Fetch total count of performances based on filters
+    const [countRows] = await pool.execute<RowDataPacket[]>(
+      `SELECT COUNT(*) as total FROM performances ${whereString}`,
+      queryParams
+    );
+    const total = countRows[0]?.total || 0;
 
     res.json({ performances: rows as Performance[], total });
   } catch (err: any) {
@@ -74,7 +92,6 @@ performancesRouter.post('/', async (req: Request, res: Response, next: NextFunct
       return res.status(500).json({ error: 'Database connection failed' });
     }
 
-    // Check if the employeeId exists
     const [employeeRows] = await pool.execute<RowDataPacket[]>(
       'SELECT id FROM employees WHERE id = ?',
       [employeeId]
@@ -91,7 +108,7 @@ performancesRouter.post('/', async (req: Request, res: Response, next: NextFunct
     res.status(201).json({ id: result.insertId, ...req.body });
   } catch (err: any) {
     console.error('Error creating performance:', err);
-    next(err); // Pass the error to the error handling middleware
+    next(err);
   }
 });
 
