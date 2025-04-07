@@ -1,7 +1,7 @@
 import mysql from 'mysql2/promise';
 
 const dbConfig = {
-  host: 'localhost', // Or your MariaDB server address
+  host: '192.168.2.14',
   user: 'project', // Your MariaDB username
   password: 'password', // Your MariaDB password
   database: 'wedgroup3', // The database name you created
