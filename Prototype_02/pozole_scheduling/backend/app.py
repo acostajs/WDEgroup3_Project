@@ -374,13 +374,13 @@ def update_shift(shift_id):
         validated_data = shift_schema.load(data, session=db.session, partial=True)
 
         # If validation passes, update the shift object
-        if 'start_time' in data:
+        if 'start_time' in data:  # Line 376
             shift.start_time = data['start_time']
-        if 'end_time' in data:
+        if 'end_time' in data:    # Line 379 (This was the incomplete line)
             shift.end_time = data['end_time']
-        if 'day' in data:
+        if 'day' in data:        # Add this line (382)
             shift.day = data['day']
-        if 'employee_id' in data:
+        if 'employee_id' in data: # Add this line (385)
             shift.employee_id = data['employee_id']
 
         db.session.commit()
