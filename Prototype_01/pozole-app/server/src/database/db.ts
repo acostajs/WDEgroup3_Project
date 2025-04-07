@@ -1,11 +1,11 @@
 import mysql from 'mysql2/promise';
 
 const dbConfig = {
-  host: '192.168.2.14',
-  user: 'project', // Your MariaDB username
-  password: 'password', // Your MariaDB password
-  database: 'wedgroup3', // The database name you created
-  connectionLimit: 10, // Optional: connection pool limit
+  host: 'localhost',
+  user: 'project', // MariaDB username
+  password: 'password', // MariaDB password
+  database: 'wedgroup3', // The database name
+  connectionLimit: 10, // connection pool limit
 };
 
 let pool: mysql.Pool | null = null;

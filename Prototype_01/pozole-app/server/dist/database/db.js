@@ -16,11 +16,11 @@ exports.connectDB = connectDB;
 exports.getPool = getPool;
 const promise_1 = __importDefault(require("mysql2/promise"));
 const dbConfig = {
-    host: 'localhost', // Or your MariaDB server address
-    user: 'project', // Your MariaDB username
-    password: 'password', // Your MariaDB password
-    database: 'wedgroup3', // The database name you created
-    connectionLimit: 10, // Optional: connection pool limit
+    host: 'localhost',
+    user: 'project', // MariaDB username
+    password: 'password', // MariaDB password
+    database: 'wedgroup3', // The database name
+    connectionLimit: 10, // connection pool limit
 };
 let pool = null;
 function connectDB() {

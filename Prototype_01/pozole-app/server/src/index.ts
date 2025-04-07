@@ -12,6 +12,20 @@ const port = process.env.PORT || 3000; // Define the port
 app.use(cors()); // Enable CORS
 app.use(express.json()); // Parse JSON request bodies
 
+app.get('/', (req: Request, res: Response) => {
+  res.send(`
+    <h1>Welcome to the Pozole App API!</h1>
+    <p>This API provides access to information about employees, schedules, and performances.</p>
+    <h2>Available Routes:</h2>
+    <ul>
+      <li><strong>/employees</strong>: Endpoints for managing employee data (e.g., GET all employees, POST new employee).</li>
+      <li><strong>/schedules</strong>: Endpoints for managing work schedules (e.g., GET all schedules, GET schedule by ID).</li>
+      <li><strong>/performances</strong>: Endpoints for managing employee performance records (e.g., GET all performances, POST new performance review).</li>
+    </ul>
+    <p>Please refer to the API documentation for specific request methods (GET, POST, PUT, DELETE) and expected data formats for each route.</p>
+  `);
+});
+
 // Function to start the server:
 async function startServer() {
   try {
