@@ -1,0 +1,20 @@
+# docker-compose.yml
+
+services:
+  # Define the web service (your Flask app)
+  web:
+    build: . # Build the image from the Dockerfile in the current directory
+    ports:
+      - "5001:5001" # Map port 5000 on the host to port 5000 in the container
+    volumes:
+      # Mount the application code into the container for live updates during development
+      - .:/app
+      # Mount the instance folder to persist the SQLite database locally
+      - ./instance:/app/instance
+    env_file:
+      - .env # Load environment variables from the .env file (for SECRET_KEY etc.)
+    environment:
+      # Set Flask environment variables needed inside the container
+      - FLASK_DEBUG=1 # Enable Flask debug mode inside container
+      # Add any other environment variables needed by your app
+    # The command to run is defined in the Dockerfile's CMD instruction
