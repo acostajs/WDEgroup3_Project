@@ -7,6 +7,8 @@ from app.utils import forecasting, scheduling
 from sqlalchemy import desc
 from app import db
 from sqlalchemy.orm import joinedload 
+from collections import defaultdict
+from datetime import timedelta
 import datetime 
 # Notice: We don't need to import 'app' or 'current_app' here anymore for route definition
 
@@ -61,25 +63,59 @@ def generate_schedule_route():
 
 @bp.route('/schedule')
 def schedule_view():
-    """Displays the generated future schedule."""
+    """Displays the generated future schedule grouped by week with costs."""
     print("Accessed /schedule route")
     try:
-        today_start = datetime.datetime.combine(datetime.date.today(), datetime.time.min)
+        today = datetime.date.today()
+        today_start = datetime.datetime.combine(today, datetime.time.min)
 
         shifts = db.session.query(Shift).options(joinedload(Shift.employee))\
             .join(Shift.employee)\
             .filter(Shift.start_time >= today_start)\
             .order_by(Shift.start_time, Employee.name).all()
 
-        print(f"Found {len(shifts)} shifts to display starting from {today_start.date()}.")
+        print(f"Found {len(shifts)} shifts to display starting from {today.strftime('%Y-%m-%d')}.")
 
-        return render_template('schedule_view.html', title='View Schedule', shifts=shifts)
+        weekly_shifts = defaultdict(list)
+        weekly_costs = defaultdict(float)
+        grand_total_cost = 0.0
+
+        for shift in shifts:
+            # Calculate week start date (Monday)
+            shift_date = shift.start_time.date()
+            week_start = shift_date - timedelta(days=shift_date.weekday()) # weekday() is 0 for Monday
+
+            # Group shift
+            weekly_shifts[week_start].append(shift)
+
+            if shift.employee and shift.employee.hourly_rate:
+                duration_seconds = (shift.end_time - shift.start_time).total_seconds()
+                duration_hours = duration_seconds / 3600
+                shift_cost = duration_hours * shift.employee.hourly_rate
+                weekly_costs[week_start] += shift_cost
+                grand_total_cost += shift_cost
+
+        sorted_weeks = sorted(weekly_shifts.keys())
+        weekly_data = []
+        for week_start_date in sorted_weeks:
+            weekly_data.append(
+                (week_start_date, weekly_shifts[week_start_date], weekly_costs[week_start_date])
+            )
+
+        print(f"Grouped shifts into {len(weekly_data)} weeks.")
+        print(f"Calculated grand total estimated cost: {grand_total_cost:.2f}")
+        
+        return render_template(
+            'schedule_view.html',
+            title='View Schedule',
+            weekly_data=weekly_data,
+            grand_total_cost=grand_total_cost 
+            )
 
     except Exception as e:
-        print(f"Error querying or rendering shifts: {e}")
-
+        print(f"Error querying/processing shifts: {e}")
         flash('Error loading schedule view.', 'danger')
-        return redirect(url_for('main.index')) 
+        return redirect(url_for('main.index'))
     
 @bp.route('/add_performance', methods=['GET', 'POST'])
 def add_performance_log():
