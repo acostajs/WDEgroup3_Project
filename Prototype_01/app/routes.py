@@ -1,8 +1,10 @@
 # IMPORTS
 
 from flask import Blueprint, render_template, flash, redirect, url_for
-from app.models import Employee, Shift
+from app.models import Employee, Shift, PerformanceLog
+from app.forms import PerformanceLogForm
 from app.utils import forecasting, scheduling
+from sqlalchemy import desc
 from app import db
 from sqlalchemy.orm import joinedload 
 import datetime 
@@ -78,6 +80,57 @@ def schedule_view():
 
         flash('Error loading schedule view.', 'danger')
         return redirect(url_for('main.index')) 
+    
+@bp.route('/add_performance', methods=['GET', 'POST'])
+def add_performance_log():
+    """Route to display and handle the performance log input form."""
+    form = PerformanceLogForm()
+    if form.validate_on_submit():
+        try:
+            employee = form.employee.data
+
+            new_log = PerformanceLog(
+                employee_id=employee.id,
+                log_date=form.log_date.data,
+                tasks_completed=form.tasks_completed.data,
+                rating=form.rating.data,
+                notes=form.notes.data
+            )
+            db.session.add(new_log)
+            db.session.commit()
+
+            flash(f'Performance logged successfully for {employee.name} on {form.log_date.data}.', 'success')
+
+            return redirect(url_for('main.add_performance_log'))
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error saving performance log: {e}")
+            flash(f'Database error saving performance log: {e}', 'danger')
+
+    return render_template('add_performance.html', title='Log Performance', form=form)
+
+@bp.route('/performance_dashboard')
+def performance_dashboard():
+    """Displays recorded performance logs in a table."""
+    print("Accessed /performance_dashboard route")
+    try:
+        logs = db.session.query(PerformanceLog).join(PerformanceLog.employee)\
+            .order_by(desc(PerformanceLog.log_date), Employee.name).all()
+
+        print(f"Found {len(logs)} performance logs.")
+
+        return render_template(
+            'performance_dashboard.html',
+            title='Performance Dashboard',
+            logs=logs 
+        )
+
+    except Exception as e:
+        print(f"Error querying performance logs: {e}")
+        flash('Error loading performance dashboard.', 'danger')
+        return redirect(url_for('main.index'))
+
+
 
 # --- Add any other routes using @bp.route(...) ---
 # Example:

@@ -6,7 +6,8 @@ Flask-SQLAlchemy
 
 # Web Forms & Validation
 Flask-WTF
-email-validator  # Required by Flask-WTF for email fields
+email-validator
+WTForms-SQLAlchemy 
 
 # AI Forecasting & Data Handling
 pandas
