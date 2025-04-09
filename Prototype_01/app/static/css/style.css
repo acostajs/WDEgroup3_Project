@@ -199,3 +199,35 @@ span[style*="color: red;"] { /* Simple targeting based on WTForms default */
     display: block; /* Make error appear on new line */
     margin-top: 0.25rem;
 }
+
+/* Schedule View Specific Enhancements */
+.schedule-table tbody tr:hover {
+    background-color: #d1ecf1; 
+}
+
+.day-header td {
+    letter-spacing: 0.5px;
+}
+
+.shift-day {
+    background-color: #fdfdfe;
+}
+
+.shift-eve {
+    background-color: #f8f9fa; 
+}
+
+tbody tr.shift-eve:nth-child(odd) {
+    background-color: #f0f1f2; 
+}
+
+.unassigned-text {
+    font-weight: bold;
+    color: #fd7e14; 
+    font-style: italic;
+}
+
+tr.unassigned-shift td:nth-child(4) { 
+     font-style: italic;
+     color: #6c757d;
+}
