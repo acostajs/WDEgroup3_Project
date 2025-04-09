@@ -1,23 +1,16 @@
-# Core Framework
 Flask
-
-# Database ORM
 Flask-SQLAlchemy
-
-# Web Forms & Validation
 Flask-WTF
 email-validator
 WTForms-SQLAlchemy 
+python-dotenv
+Flask-Mail
+gunicorn  
+psycopg2-binary
 
 # AI Forecasting & Data Handling
 pandas
 prophet
 
-# Configuration Management
-python-dotenv  # For loading environment variables from .env file
 
-# Email Notifications
-Flask-Mail     # Helper for sending emails from Flask
 
-# WSGI Server (for running the app in Docker/production)
-gunicorn       # Common choice for Linux-based containers
