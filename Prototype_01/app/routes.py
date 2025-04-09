@@ -72,11 +72,11 @@ def schedule_view():
 
 
         shifts = db.session.query(Shift).options(joinedload(Shift.employee))\
-            .join(Shift.employee)\
+            .outerjoin(Shift.employee)\
             .filter(Shift.start_time >= start_of_month, Shift.start_time < end_of_month)\
-            .order_by(Shift.start_time, Employee.name).all()
+            .order_by(Shift.start_time, Shift.required_position).all()
 
-        print(f"Found {len(shifts)} shifts for {month_name_str}.")
+        print(f"Found {len(shifts)} shifts for {month_name_str} (including unassigned).")
 
         weekly_shifts = defaultdict(list)
         weekly_costs = defaultdict(float)

@@ -10,10 +10,9 @@
                  (Total Est. Cost: ${{ "%.2f"|format(weekly_total_cost) }})
             </h4>
 
-            <table border="1" style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
+            <table class="schedule-table" border="1" style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
                 <thead>
                     <tr style="background-color: #f2f2f2;">
-                        <th style="padding: 8px; width: 18%;">Date</th>
                         <th style="padding: 8px; width: 12%;">Start Time</th>
                         <th style="padding: 8px; width: 12%;">End Time</th>
                         <th style="padding: 8px;">Employee</th>
@@ -21,28 +20,49 @@
                         <th style="padding: 8px; width: 12%;">Est. Cost</th>
                     </tr>
                 </thead>
+
                 <tbody>
                     {% for shift in shifts_in_week %}
-                        <tr>
-                            <td style="padding: 8px;">{{ shift.start_time.strftime('%Y-%m-%d (%a)') }}</td>
-                            <td style="padding: 8px;">{{ shift.start_time.strftime('%I:%M %p') }}</td>
-                            <td style="padding: 8px;">{{ shift.end_time.strftime('%I:%M %p') }}</td>
-                            <td style="padding: 8px;">{{ shift.employee.name if shift.employee else 'N/A' }}</td>
-                            <td style="padding: 8px;">{{ shift.employee.position if shift.employee else 'N/A' }}</td>
+                        {% if loop.first or loop.previtem.start_time.date() != shift.start_time.date() %}
+                        <tr class="day-header">
+                            <td colspan="5" style="background-color: #e9ecef; font-weight: bold; padding: 6px 12px; border-top: 2px solid #adb5bd;">
+                                {{ shift.start_time.strftime('%Y-%m-%d (%A)') }} 
+                            </td>
+                        </tr>
+                        {% endif %}
+
+                        {% set shift_class = 'shift-day' if shift.start_time.hour < 14 else 'shift-eve' %}
+                        <tr class="{{ shift_class }} {{ 'unassigned-shift' if not shift.employee }}">
+
+                            <td style="padding: 8px;">{{ shift.start_time.strftime('%I:%M %p') }}</td> 
+                            <td style="padding: 8px;">{{ shift.end_time.strftime('%I:%M %p') }}</td> 
+                            <td style="padding: 8px;">
+                                {% if shift.employee %} {{ shift.employee.name }}
+                                {% else %} <strong class="unassigned-text">-- Unassigned --</strong>
+                                {% endif %}
+                            </td>
+
+                            <td style="padding: 8px;">
+                                {% if shift.employee %} {{ shift.employee.position }}
+                                {% else %} ({{ shift.required_position }})
+                                {% endif %}
+                            </td>
+
                             <td style="padding: 8px; text-align: right;">
                                 {% if shift.employee and shift.employee.hourly_rate %}
                                     {% set duration_hours = (shift.end_time - shift.start_time).total_seconds() / 3600 %}
                                     ${{ "%.2f"|format(duration_hours * shift.employee.hourly_rate) }}
                                 {% else %}
-                                    -
+                                     $0.00
                                 {% endif %}
                             </td>
                         </tr>
-                    {% endfor %}
+                    {% endfor %} 
                 </tbody>
+
                  <tfoot>
                     <tr style="font-weight: bold; background-color: #f9f9f9;">
-                        <td colspan="5" style="padding: 8px; text-align: right;">Week Total:</td>
+                        <td colspan="4" style="padding: 8px; text-align: right;">Week Total:</td>
                         <td style="padding: 8px; text-align: right;">${{ "%.2f"|format(weekly_total_cost) }}</td>
                     </tr>
                 </tfoot>

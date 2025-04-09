@@ -1,169 +1,227 @@
 # app/utils/scheduling.py
+# Replace entire file content with this:
 
-from app import db # Import the database instance
-from app.models import Employee, Shift # Import your database models
-from . import forecasting # Import the forecasting module from the same directory (utils)
+from app import db
+from app.models import Employee, Shift
+from . import forecasting
 from .notifications import send_schedule_update_email
 import datetime
 from datetime import timedelta
 import random
-import pandas as pd # Need pandas to work with the forecast DataFrame
+import pandas as pd
 from collections import defaultdict
 import calendar
+import logging # Added for slightly better logging
 
-DAY_SHIFT_START = datetime.time(10, 0)
-DAY_SHIFT_END = datetime.time(18, 0)
-EVE_SHIFT_START = datetime.time(16, 0)
-EVE_SHIFT_END = datetime.time(0, 0) 
+# Configure logger (optional, but good practice)
+log = logging.getLogger(__name__)
+logging.getLogger('cmdstanpy').setLevel(logging.WARNING) # Suppress cmdstanpy info
+logging.getLogger('prophet').setLevel(logging.WARNING) # Suppress prophet info
 
+
+# --- Define Shift Times & Staffing Rules ---
+
+# Shift Definitions (Using time objects)
+DAY_SHIFT_START = datetime.time(10, 0)  # 10:00 AM
+DAY_SHIFT_END = datetime.time(18, 0)    #  6:00 PM (8 hours)
+EVE_SHIFT_START = datetime.time(16, 0)  #  4:00 PM
+EVE_SHIFT_END = datetime.time(0, 0)     # 12:00 AM Midnight
+
+# Staffing Needs: How many of each position per shift type (Day/Eve)
+# REVIEW THESE NUMBERS - Especially for 'Day' shift estimates
 BASE_NEEDS = {
-    'Day': { 
+    'Day': { # 10:00 - 18:00 Estimate
         'Manager': 1, 'Host/Hostess': 1, 'Server': 1, 'Bartender': 1,
-        'Chef de Partie': 1, 'Cook': 2, 'Dishwasher': 1
+        'Chef de Partie': 1, 'Cook': 2, 'Dishwasher': 1, 'Chef': 1
+        # Add other positions if needed, ensure names match Employee positions
     },
-    'Eve': { 
-        'Manager': 1, 'Host/Hostess': 1, 
-        'Server': 2, 'Bartender': 1, 'Chef de Partie': 2, 'Cook': 4,
-        'Dishwasher': 2
+    'Eve': { # 16:00 - 00:00 (Peak)
+        'Manager': 1, 'Host/Hostess': 1, 'Server': 3, 'Bartender': 1,
+        'Chef de Partie': 2, 'Cook': 4, 'Dishwasher': 2, 'Sous Chef': 1
+        # Add other positions if needed
     }
 }
 
+# Optional: Extra staff needed only if forecast demand is high
 HIGH_DEMAND_EXTRA = {
-    'Eve': {'Server': 1, 'Cook': 1} 
+    'Eve': {'Server': 2, 'Cook': 2} # Example: Add 2 Servers, 2 Cooks on busy evenings
 }
 
-DEMAND_THRESHOLD = 175
+# Demand threshold from forecast (yhat) to trigger extra staff
+DEMAND_THRESHOLD = 175 # Adjust as needed
+
+# --- End Definitions ---
+
 
 def create_schedule(target_date=None):
     """
-    Generates a schedule for a specific calendar month based on forecast
-    and saves shifts to DB, then sends notifications.
-
-    Args:
-        target_date (datetime.date, optional): A date within the month to generate for.
-                                              Defaults to today's date (current month).
+    Generates a position-based, multi-shift schedule for a target month
+    based on forecast, creating unassigned shifts if needed, saves shifts
+    to DB, and sends notifications for assigned shifts.
     """
-    print("--- Starting Schedule Generation ---")
-    employee_shifts_to_notify = defaultdict(list)
-    employees_scheduled = {}
+    log.info("--- Starting Advanced Schedule Generation ---")
+    employee_shifts_to_notify = defaultdict(list) # Store assigned shifts for notifications {emp_id: [shift1, shift2]}
+    employees_scheduled_this_run = {} # Store employee objects for easy lookup {emp_id: employee_obj}
+    shifts_to_add_to_session = [] # Collect ALL shifts (assigned and unassigned)
 
     try:
-        # Determine target month
-        if target_date is None:
-            target_date = datetime.date.today()
+        # 1. Determine Target Month
+        if target_date is None: target_date = datetime.date.today()
         start_of_month = target_date.replace(day=1)
-        # Calculate number of days in the target month
         days_in_month = calendar.monthrange(start_of_month.year, start_of_month.month)[1]
-        # Calculate end of the month (exclusive for filtering)
-        end_of_month = start_of_month + timedelta(days=days_in_month)
+        end_of_month_exclusive = start_of_month + timedelta(days=days_in_month)
         month_name_str = start_of_month.strftime("%B %Y")
-        print(f"Targeting schedule generation for: {month_name_str}")
+        log.info(f"Targeting schedule generation for: {month_name_str}")
 
-
-        # 1. Get Forecast (Forecast further ahead to ensure coverage)
-        #    Let's forecast ~60 days - adjust if needed for edge cases
+        # 2. Get Forecast
         days_to_forecast = 60
-        print(f"Generating forecast for {days_to_forecast} days...")
+        log.info(f"Generating forecast for {days_to_forecast} days...")
         forecast_df = forecasting.generate_forecast(days_to_predict=days_to_forecast)
         if forecast_df is None:
-            print("ERROR: Forecast generation failed.")
+            log.error("Forecast generation failed. Cannot create schedule.")
             return False
+        forecast_df['ds'] = pd.to_datetime(forecast_df['ds']).dt.date # Ensure only date part
+        log.info("Forecast generated.")
 
-        # Filter forecast for ONLY the dates within the target month
-        target_month_forecast = forecast_df[
-            (forecast_df['ds'] >= pd.Timestamp(start_of_month)) &
-            (forecast_df['ds'] < pd.Timestamp(end_of_month))
-        ].copy()
-
-        if target_month_forecast.empty:
-            print(f"No forecast data available for the target month ({month_name_str}).")
-            # Might still want to clear shifts for this month
-        else:
-             print(f"Using {len(target_month_forecast)} forecast days within {month_name_str}.")
-
-
-        # 2. Get Employees (No change needed)
+        # 3. Get Employees and Group by Position
         employees = Employee.query.all()
-        if not employees:
-            print("WARNING: No employees found.")
-            # Still proceed to clear shifts for the month
+        employees_by_position = defaultdict(list)
+        if employees:
+            for emp in employees:
+                if emp.position: employees_by_position[emp.position].append(emp)
+            log.info(f"Found {len(employees)} employees, grouped into {len(employees_by_position)} positions.")
+            if not employees_by_position: log.warning("No employees with positions found.")
         else:
-            employee_list = list(employees)
-            print(f"Found {len(employee_list)} employees.")
+            log.warning("No employees found in the database.")
 
-
-        # 3. Clear existing shifts *for the target month only*
-        print(f"Clearing existing shifts for {month_name_str}...")
+        # 4. Clear existing shifts for the target month only
+        log.info(f"Clearing existing shifts for {month_name_str}...")
         num_deleted = Shift.query.filter(
             Shift.start_time >= start_of_month,
-            Shift.start_time < end_of_month
+            Shift.start_time < end_of_month_exclusive
         ).delete(synchronize_session='fetch')
-        print(f"{num_deleted} existing shifts cleared for {month_name_str} (pending commit).")
+        log.info(f"{num_deleted} existing shifts cleared from session (pending commit).")
 
+        # 5. Loop Through Days and Shifts, Prepare Shift Objects
+        log.info(f"Preparing new shifts for {month_name_str}...")
+        for day_offset in range(days_in_month):
+            current_date = start_of_month + timedelta(days=day_offset)
+            log.debug(f"\nProcessing Date: {current_date.strftime('%Y-%m-%d (%a)')}")
 
-        # 4. Loop through TARGET MONTH forecast & Prepare Shifts
-        shifts_to_add_to_session = []
-        print(f"Preparing new shifts for {month_name_str}...")
-        # Iterate only over the days within the target month's forecast
-        for index, row in target_month_forecast.iterrows():
-            forecast_date = row['ds'].date() # Date is already within the target month
-            predicted_demand = row['yhat']
+            # Find forecast for the current day
+            daily_forecast = forecast_df[forecast_df['ds'] == current_date]
+            predicted_demand = daily_forecast['yhat'].iloc[0] if not daily_forecast.empty else 0
+            is_high_demand = predicted_demand >= DEMAND_THRESHOLD
+            log.debug(f"  Demand (yhat): {predicted_demand:.2f} -> {'High' if is_high_demand else 'Low'} Demand")
 
-            # --- Keep staffing rule, assignment, shift creation logic ---
-            if predicted_demand < DEMAND_THRESHOLD: num_needed = LOW_DEMAND_STAFF
-            else: num_needed = HIGH_DEMAND_STAFF
-            print(f"Date: {forecast_date}, Predicted: {predicted_demand:.2f}, Staff Needed: {num_needed}")
+            # --- Generate Shifts for Each Type (Day, Eve) ---
+            for shift_type in ['Day', 'Eve']:
+                log.debug(f"  Processing {shift_type} Shift Needs...")
+                needs = BASE_NEEDS.get(shift_type, {}).copy()
+                shift_start_time = DAY_SHIFT_START if shift_type == 'Day' else EVE_SHIFT_START
+                shift_end_time = DAY_SHIFT_END if shift_type == 'Day' else EVE_SHIFT_END
 
-            num_to_assign = min(num_needed, len(employee_list))
-            if num_to_assign > 0:
-                random.shuffle(employee_list)
-                assigned_employees = employee_list[:num_to_assign]
-                for emp in assigned_employees:
-                    start_datetime = datetime.datetime.combine(forecast_date, SHIFT_START_TIME)
-                    end_datetime = datetime.datetime.combine(forecast_date, SHIFT_END_TIME)
-                    new_shift = Shift(employee_id=emp.id, start_time=start_datetime, end_time=end_datetime)
-                    shifts_to_add_to_session.append(new_shift)
-                    employee_shifts_to_notify[emp.id].append(new_shift)
-                    employees_scheduled[emp.id] = emp
-                    print(f"  - Prepared shift for {emp.name} ({start_datetime.strftime('%Y-%m-%d %H:%M')} to {end_datetime.strftime('%H:%M')})")
-            else:
-                 print(f"  - No staff assigned (needed {num_needed}, available {len(employee_list)})")
-            # --- End of inner assignment loop ---
-        # --- End of loop through forecast days ---
+                if is_high_demand and shift_type in HIGH_DEMAND_EXTRA:
+                     for pos, count in HIGH_DEMAND_EXTRA[shift_type].items():
+                        needs[pos] = needs.get(pos, 0) + count
+                     log.debug(f"    (High demand: Added extra staff - {HIGH_DEMAND_EXTRA[shift_type]})")
 
+                start_datetime = datetime.datetime.combine(current_date, shift_start_time)
+                end_date = current_date + timedelta(days=1) if shift_end_time == datetime.time(0, 0) else current_date
+                end_datetime = datetime.datetime.combine(end_date, shift_end_time)
 
-        # 5. Add all prepared shifts and commit (No change needed)
+                # --- Fill required positions for this shift ---
+                for position, count_needed in needs.items():
+                    if count_needed <= 0: continue
+
+                    log.debug(f"    Need {count_needed} x {position}")
+                    available_for_pos = employees_by_position.get(position, [])
+
+                    if not available_for_pos:
+                        log.warning(f"      No employees found for position: {position}. Creating {count_needed} UNASSIGNED shifts.")
+                        for i in range(count_needed):
+                            new_shift = Shift(
+                                employee_id=None, start_time=start_datetime,
+                                end_time=end_datetime, required_position=position
+                            )
+                            shifts_to_add_to_session.append(new_shift)
+                        continue # Move to next position
+
+                    # We have employees, try to assign them
+                    shuffled_available = random.sample(available_for_pos, len(available_for_pos))
+                    assigned_employee_ids_this_slot_type = set()
+
+                    log.debug(f"      Available {position}s: {len(shuffled_available)}. Assigning up to: {count_needed}")
+
+                    for i in range(count_needed): # Loop for the number of slots needed
+                        assigned_employee = None
+                        # Find next available unique employee from shuffled list
+                        for emp in shuffled_available:
+                            # Check if not already assigned to THIS specific shift block
+                            # WARNING: Doesn't check for overlaps with OTHER shifts yet
+                            if emp.id not in assigned_employee_ids_this_slot_type:
+                                assigned_employee = emp
+                                assigned_employee_ids_this_slot_type.add(emp.id)
+                                break # Found one
+
+                        # Create the shift object (assigned or unassigned)
+                        new_shift = Shift(
+                            employee_id=assigned_employee.id if assigned_employee else None,
+                            start_time=start_datetime,
+                            end_time=end_datetime,
+                            required_position=position
+                        )
+                        shifts_to_add_to_session.append(new_shift) # Add to list for saving
+
+                        if assigned_employee:
+                            log.debug(f"      -> Assigned {assigned_employee.name} to {position} shift slot {i+1}.")
+                            employees_scheduled_this_run[assigned_employee.id] = assigned_employee
+                            employee_shifts_to_notify[assigned_employee.id].append(new_shift) # Add to notification list
+                        else:
+                            log.warning(f"      -> No further available {position} found for slot {i+1}/{count_needed}. Created UNASSIGNED shift.")
+                    # --- End loop for assigning count_needed ---
+                # --- End loop for positions ---
+            # --- End loop for shift_type ---
+        # --- End loop for days ---
+
+        # 6. Add all prepared shifts and commit
         if shifts_to_add_to_session:
-            print(f"Attempting to add and commit {len(shifts_to_add_to_session)} new shifts for {month_name_str}...")
+            log.info(f"\nAttempting to add and commit {len(shifts_to_add_to_session)} new shifts for {month_name_str}...")
             db.session.add_all(shifts_to_add_to_session)
-            db.session.commit() # Commit delete and all adds
-            print("Shifts committed successfully.")
+            db.session.commit()
+            log.info("Shifts committed successfully.")
 
-            # 6. Send Notifications (No change needed - uses committed shifts)
-            print("--- Starting Email Notifications ---")
-            # ... (keep existing notification loop) ...
-            print(f"--- Email Notifications Finished: ... ---")
+            # 7. Send Notifications (only for assigned shifts)
+            log.info("--- Starting Email Notifications ---")
+            notification_success_count = 0
+            notification_fail_count = 0
+            for emp_id, shifts_list in employee_shifts_to_notify.items():
+                employee = employees_scheduled_this_run.get(emp_id)
+                if employee and employee.email: # Check for email here too
+                    log.info(f"Attempting to send notification to {employee.name} ({employee.email})...")
+                    shifts_list.sort(key=lambda x: x.start_time)
+                    if send_schedule_update_email(employee, shifts_list):
+                        notification_success_count += 1
+                    else:
+                        notification_fail_count += 1
+                elif employee:
+                    log.warning(f"Cannot send email to {employee.name}, missing email address.")
+                    notification_fail_count += 1
+                else:
+                     log.warning(f"Could not find employee object for ID {emp_id} during notification.")
+                     notification_fail_count += 1
+            log.info(f"--- Email Notifications Finished: {notification_success_count} succeeded, {notification_fail_count} failed ---")
 
         else:
-            # Commit the delete even if no new shifts are added
+            # Only commit if only deletes happened
             db.session.commit()
-            print(f"No new shifts generated for {month_name_str}. Existing shifts for month cleared.")
+            log.info(f"No new shifts generated for {month_name_str}. Existing shifts for month cleared.")
 
-        return True # Overall function success
+        return True
 
     except Exception as e:
         db.session.rollback()
-        print(f"ERROR during schedule generation for {target_date.strftime('%B %Y') if target_date else 'current month'}: {e}")
-        # import traceback # Uncomment for detailed errors
-        # print(traceback.format_exc())
+        log.error(f"ERROR during schedule generation for {target_date.strftime('%B %Y') if target_date else 'current month'}: {e}", exc_info=True) # Log exception info
         return False
     finally:
-        print("--- Schedule Generation Process Finished ---")
-
-
-# Example of how to call it (for testing purposes if run directly - needs app context!)
-if __name__ == '__main__':
-    # This direct call won't work easily without setting up a Flask app context.
-    # It's better to test via a Flask route or 'flask shell'.
-    print("This script should be called from within a Flask application context.")
-    print("Use 'flask shell' or a web route to run create_schedule().")
+        log.info("--- Schedule Generation Process Finished ---")
