@@ -5,17 +5,34 @@ from app.models import Employee, Shift # Import your database models
 from . import forecasting # Import the forecasting module from the same directory (utils)
 from .notifications import send_schedule_update_email
 import datetime
+from datetime import timedelta
 import random
 import pandas as pd # Need pandas to work with the forecast DataFrame
 from collections import defaultdict
+import calendar
 
-# --- Configuration (Simple settings for the prototype) ---
-DEMAND_THRESHOLD = 175 # Arbitrary threshold based on forecast value 'yhat'
-LOW_DEMAND_STAFF = 1 # Number of staff needed if below threshold
-HIGH_DEMAND_STAFF = 2 # Number of staff needed if at/above threshold
-SHIFT_START_TIME = datetime.time(9, 0) # 9:00 AM
-SHIFT_END_TIME = datetime.time(17, 0) # 5:00 PM
-# --------------------------------------------------------
+DAY_SHIFT_START = datetime.time(10, 0)
+DAY_SHIFT_END = datetime.time(18, 0)
+EVE_SHIFT_START = datetime.time(16, 0)
+EVE_SHIFT_END = datetime.time(0, 0) 
+
+BASE_NEEDS = {
+    'Day': { 
+        'Manager': 1, 'Host/Hostess': 1, 'Server': 1, 'Bartender': 1,
+        'Chef de Partie': 1, 'Cook': 2, 'Dishwasher': 1
+    },
+    'Eve': { 
+        'Manager': 1, 'Host/Hostess': 1, 
+        'Server': 2, 'Bartender': 1, 'Chef de Partie': 2, 'Cook': 4,
+        'Dishwasher': 2
+    }
+}
+
+HIGH_DEMAND_EXTRA = {
+    'Eve': {'Server': 1, 'Cook': 1} 
+}
+
+DEMAND_THRESHOLD = 175
 
 def create_schedule(target_date=None):
     """
@@ -81,7 +98,7 @@ def create_schedule(target_date=None):
             Shift.start_time >= start_of_month,
             Shift.start_time < end_of_month
         ).delete(synchronize_session='fetch')
-        print(f"{num_deleted} existing shifts cleared from session (pending commit).")
+        print(f"{num_deleted} existing shifts cleared for {month_name_str} (pending commit).")
 
 
         # 4. Loop through TARGET MONTH forecast & Prepare Shifts
