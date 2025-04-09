@@ -6,8 +6,8 @@ import os
 import logging
 
 # Suppress informational messages from Prophet/cmdstanpy
-logging.getLogger('cmdstanpy').setLevel(logging.WARNING)
-logging.getLogger('prophet').setLevel(logging.WARNING)
+logging.getLogger("cmdstanpy").setLevel(logging.WARNING)
+logging.getLogger("prophet").setLevel(logging.WARNING)
 
 
 def generate_forecast(days_to_predict=7):
@@ -22,13 +22,13 @@ def generate_forecast(days_to_predict=7):
                           ['ds', 'yhat', 'yhat_lower', 'yhat_upper']
                           Returns None if an error occurs (e.g., file not found).
     """
-    print("Attempting to generate forecast...") # Simple console log
+    print("Attempting to generate forecast...")  # Simple console log
 
     # Construct the path to the data file relative to this script's location
     # Go up from 'utils', up from 'app', then into 'data'
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    data_dir = os.path.join(os.path.dirname(base_dir), 'data')
-    file_path = os.path.join(data_dir, 'historical_sales.csv')
+    data_dir = os.path.join(os.path.dirname(base_dir), "data")
+    file_path = os.path.join(data_dir, "historical_sales.csv")
 
     print(f"Looking for data file at: {file_path}")
 
@@ -38,13 +38,13 @@ def generate_forecast(days_to_predict=7):
 
         # --- Data Preparation ---
         # Ensure 'ds' column is datetime
-        df['ds'] = pd.to_datetime(df['ds'])
+        df["ds"] = pd.to_datetime(df["ds"])
 
         # Basic check for required columns
-        if 'ds' not in df.columns or 'y' not in df.columns:
+        if "ds" not in df.columns or "y" not in df.columns:
             print("Error: CSV must contain 'ds' and 'y' columns.")
             return None
-        
+
         # Prophet requires at least 2 data points
         if len(df) < 2:
             print("Error: Need at least 2 data points to create a forecast.")
@@ -69,7 +69,7 @@ def generate_forecast(days_to_predict=7):
 
         # --- Return Results ---
         # Select relevant columns (date, prediction, confidence interval)
-        forecast_subset = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']]
+        forecast_subset = forecast[["ds", "yhat", "yhat_lower", "yhat_upper"]]
 
         # Optional: print the tail (last few rows including future predictions)
         print("Forecast results (tail):")
@@ -87,8 +87,9 @@ def generate_forecast(days_to_predict=7):
         # print(traceback.format_exc())
         return None
 
+
 # Example of how to call it (for testing purposes if run directly)
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("Running forecast generation directly...")
     forecast_result = generate_forecast(days_to_predict=14)
     if forecast_result is not None:
