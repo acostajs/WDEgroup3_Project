@@ -1,19 +1,15 @@
 {% extends "layout.html" %}
 
 {% block content %}
-    <h2>Generated Schedule (Grouped by Week)</h2>
+    <h2>Generated Schedule for {{ month_name }} (Grouped by Week)</h2>
 
-    {# Check if the weekly_data list passed from the route has items #}
     {% if weekly_data %}
-        {# Outer loop: Iterate through each week's data tuple #}
         {% for week_start_date, shifts_in_week, weekly_total_cost in weekly_data %}
-            {# Display a header for the week #}
             <h4 style="margin-top: 25px; margin-bottom: 5px;">
                 Week of: {{ week_start_date.strftime('%B %d, %Y') }}
                  (Total Est. Cost: ${{ "%.2f"|format(weekly_total_cost) }})
             </h4>
 
-            {# Table for this specific week's shifts #}
             <table border="1" style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
                 <thead>
                     <tr style="background-color: #f2f2f2;">
@@ -26,7 +22,6 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {# Inner loop: Iterate through shifts within this week #}
                     {% for shift in shifts_in_week %}
                         <tr>
                             <td style="padding: 8px;">{{ shift.start_time.strftime('%Y-%m-%d (%a)') }}</td>
@@ -45,7 +40,6 @@
                         </tr>
                     {% endfor %}
                 </tbody>
-                 {# Display weekly total again in footer (optional) #}
                  <tfoot>
                     <tr style="font-weight: bold; background-color: #f9f9f9;">
                         <td colspan="5" style="padding: 8px; text-align: right;">Week Total:</td>
@@ -53,22 +47,19 @@
                     </tr>
                 </tfoot>
             </table>
-        {% endfor %} {# End of outer loop for weeks #}
+        {% endfor %} 
 
-        {# Display Grand Total after all weeks #}
         <h3 style="text-align: right; margin-top: 20px;">
-            Grand Total Estimated Cost (for displayed period): ${{ "%.2f"|format(grand_total_cost) }}
+            Grand Total Estimated Cost (for {{ month_name }}): ${{ "%.2f"|format(grand_total_cost) }}
         </h3>
 
     {% else %}
-        {# Displayed if no shifts were found at all #}
-        <p style="margin-top: 15px;">No shifts found in the schedule for upcoming dates.</p>
-        <p>Try <a href="{{ url_for('main.generate_schedule_route') }}">generating the schedule</a> first.</p>
+        <p style="margin-top: 15px;">No shifts found in the schedule for {{ month_name }}.</p>
+        <p>Try <a href="{{ url_for('main.generate_schedule_route') }}">generating the schedule</a> for the current month first.</p>
     {% endif %}
 
-    {# Keep links at the bottom #}
     <hr style="margin-top: 20px;">
     <p><a href="{{ url_for('main.index') }}">Back to Home</a></p>
-    <p><a href="{{ url_for('main.generate_schedule_route') }}">Re-generate Schedule</a></p>
+    <p><a href="{{ url_for('main.generate_schedule_route') }}">Re-generate Schedule for Current Month</a></p>
 
 {% endblock %}

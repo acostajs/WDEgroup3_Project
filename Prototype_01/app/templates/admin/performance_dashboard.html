@@ -10,7 +10,6 @@
                 <tr style="background-color: #f2f2f2;">
                     <th style="padding: 8px;">Date</th>
                     <th style="padding: 8px;">Employee</th>
-                    <th style="padding: 8px; text-align: center;">Tasks Completed</th>
                     <th style="padding: 8px; text-align: center;">Rating</th>
                     <th style="padding: 8px;">Notes</th>
                     <th style="padding: 8px;">Logged At (UTC)</th>
@@ -24,7 +23,6 @@
                         {# Access employee name via the relationship loaded in the query #}
                         <td style="padding: 8px;">{{ log.employee.name if log.employee else 'N/A' }}</td>
                         {# Use the 'default' filter to show '-' if value is None or 0 #}
-                        <td style="padding: 8px; text-align: center;">{{ log.tasks_completed|default('-', true) }}</td>
                         <td style="padding: 8px; text-align: center;">{{ log.rating|default('-', true) }}</td>
                         {# Use 'default' for notes too, showing empty string if None #}
                         <td style="padding: 8px;">{{ log.notes|default('', true) }}</td>
@@ -36,11 +34,11 @@
     {% else %}
         {# Displayed if the 'logs' list was empty #}
         <p style="margin-top: 15px;">No performance logs have been recorded yet.</p>
-        <p>You can <a href="{{ url_for('main.add_performance_log') }}">add a performance log here</a>.</p>
+        <p>You can <a href="{{ url_for('admin.add_performance_log') }}">add a performance log here</a>.</p>
     {% endif %}
 
     <hr style="margin-top: 20px;">
     <p><a href="{{ url_for('main.index') }}">Back to Home</a></p>
-    <p><a href="{{ url_for('main.add_performance_log') }}">Add Performance Log</a></p>
+    <p><a href="{{ url_for('admin.add_performance_log') }}">Add Performance Log</a></p>
 
 {% endblock %}

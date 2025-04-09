@@ -1,18 +1,16 @@
 {% extends "layout.html" %}
 
 {% block content %}
-    <h2>{{ title }}</h2> 
+    <h2>{{ title }}</h2>
 
-    {# Button/Link to add a new employee #}
     <p style="margin-top: 15px; margin-bottom: 15px;">
         <a href="{{ url_for('admin.add_employee') }}" class="btn btn-primary">Add New Employee</a>
     </p>
 
-    {# Check if the employees list passed from the route has items #}
     {% if employees %}
         <table border="1" style="border-collapse: collapse; width: 100%;">
             <thead>
-                <tr style="background-color: #f2f2f2;">
+               <tr style="background-color: #f2f2f2;">
                     <th style="padding: 8px;">Name</th>
                     <th style="padding: 8px;">Position</th>
                     <th style="padding: 8px;">Email</th>
@@ -21,31 +19,33 @@
                 </tr>
             </thead>
             <tbody>
-                {# Loop through each employee object #}
                 {% for employee in employees %}
                     <tr>
                         <td style="padding: 8px;">{{ employee.name }}</td>
                         <td style="padding: 8px;">{{ employee.position }}</td>
                         <td style="padding: 8px;">{{ employee.email }}</td>
-                        <td style="padding: 8px; text-align: right;">
-                            {# Display rate formatted, or '-' if None/missing #}
-                            {% if employee.hourly_rate is not none %}
-                                ${{ "%.2f"|format(employee.hourly_rate) }}
-                            {% else %}
-                                -
-                            {% endif %}
-                        </td>
+                        <td style="padding: 8px; text-align: right;">...</td>
                         <td style="padding: 8px;">
-                            {# Link to the edit page (to be created next) #}
-                            <a href="{{ url_for('admin.edit_employee', employee_id=employee.id) }}">Edit</a> 
-                            {# Delete link could go here later #}
+                            <a href="{{ url_for('admin.edit_employee', employee_id=employee.id) }}" style="margin-right: 10px;">Edit</a>
+
+                            <form action="{{ url_for('admin.delete_employee', employee_id=employee.id) }}"
+                                  method="post"
+                                  style="display: inline;"
+                                  {# JavaScript confirmation dialog before form submission #}
+                                  onsubmit="return confirm('Are you ABSOLUTELY sure you want to delete employee {{ employee.name }}? This cannot be undone.');">
+
+                                {# If CSRF protection is enabled globally (usually is with Flask-WTF),
+                                   you need to include the token. Flask provides csrf_token() for this.
+                                   Uncomment the next line if delete fails due to CSRF error. #}
+
+                                <button type="submit" class="btn btn-danger btn-sm" style="background-color: #dc3545; border-color: #dc3545; padding: 0.2rem 0.4rem; font-size: 0.8rem; cursor:pointer;">Delete</button>
+                            </form>
                         </td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
     {% else %}
-        {# Displayed if the employees list is empty #}
         <p>No employees found in the database yet.</p>
     {% endif %}
 

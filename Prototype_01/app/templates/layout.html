@@ -3,26 +3,37 @@
   <head>
     <title>{{ title }} - Pozole Scheduler</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <style>
-      .flash { padding: 10px; margin-bottom: 15px; border: 1px solid transparent; border-radius: 4px; }
-      .flash.success { color: #155724; background-color: #d4edda; border-color: #c3e6cb; }
-      .flash.danger { color: #721c24; background-color: #f8d7da; border-color: #f5c6cb; }
-    </style>
   </head>
   <body>
 
+    <nav class="navbar">
+      <ul>
+          <li><a href="{{ url_for('main.index') }}">Home</a></li>
+          <li><a href="{{ url_for('main.schedule_view') }}">View Schedule</a></li>
+          <li><a href="{{ url_for('admin.performance_dashboard') }}">Performance Dashboard</a></li>
+          <li><a href="{{ url_for('admin.add_performance_log') }}">Log Performance</a></li>
+          <li><a href="{{ url_for('admin.list_employees') }}">Manage Employees</a></li>
+          
+          {# <li><a href="{{ url_for('main.generate_schedule_route') }}">(Re)Generate Schedule</a></li> #}
+      </ul>
+  </nav>
+
+
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
-        <div>
+        <div> 
           {% for category, message in messages %}
             <div class="flash {{ category }}">{{ message }}</div>
           {% endfor %}
         </div>
       {% endif %}
     {% endwith %}
-    <h1>Pozole Staff Scheduler</h1>
-    <hr>
-    {% block content %}{% endblock %}
+
+    <div class="content-wrapper">
+        {# Main heading can be inside the content block if preferred, or here #}
+        {# <h1>Pozole Staff Scheduler</h1> <hr> #}
+        {% block content %}{% endblock %} 
+    </div>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
   </body>
 </html>

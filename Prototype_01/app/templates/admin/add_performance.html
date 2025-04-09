@@ -27,15 +27,6 @@
             {% endif %}
         </p>
 
-        {# Render Tasks Completed Field #}
-        <p>
-            {{ form.tasks_completed.label }}<br>
-            {{ form.tasks_completed(class_='form-control', size=10) }}
-            {% if form.tasks_completed.errors %}
-                <br><span style="color: red;">[{{ ', '.join(form.tasks_completed.errors) }}]</span>
-            {% endif %}
-        </p>
-
         {# Render Rating Field #}
         <p>
             {{ form.rating.label }}<br>

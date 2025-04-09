@@ -64,12 +64,6 @@ class PerformanceLogForm(FlaskForm):
         default=datetime.date.today,
         validators=[DataRequired()]
     )
-
-    tasks_completed = IntegerField(
-        'Tasks Completed',
-        validators=[Optional()] 
-    )
-
     
     rating = FloatField(
         'Rating (1-5)',

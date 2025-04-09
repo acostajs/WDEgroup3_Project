@@ -26,7 +26,6 @@ class PerformanceLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False, index=True)
     log_date = db.Column(db.Date, nullable=False, index=True, default=datetime.date.today) 
-    tasks_completed = db.Column(db.Integer) 
     rating = db.Column(db.Float) 
     notes = db.Column(db.Text) 
     recorded_at = db.Column(db.DateTime, default=datetime.datetime.utcnow) 
@@ -34,6 +33,6 @@ class PerformanceLog(db.Model):
     employee = db.relationship('Employee', backref=db.backref('performance_logs', lazy='dynamic'))
 
     def __repr__(self):
-        return f'<PerformanceLog E:{self.employee_id} D:{self.log_date} Tasks:{self.tasks_completed} Rating:{self.rating}>'
+        return f'<PerformanceLog E:{self.employee_id} D:{self.log_date} Rating:{self.rating}>'
 
 
