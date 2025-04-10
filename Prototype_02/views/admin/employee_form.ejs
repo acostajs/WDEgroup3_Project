@@ -8,7 +8,7 @@
     <%- include('../partials/flash', { successFlash: typeof successFlash !== 'undefined' ? successFlash : [], errorFlash: typeof errorFlash !== 'undefined' ? errorFlash : [] }) %>
 
     <div class="content-wrapper">
-        <h2><%= title %></h2> {# Displays "Add New Employee" or "Edit Employee" #}
+        <h2><%= title %></h2> 
 
         <%# Display validation errors if passed from the route %>
         <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
@@ -26,8 +26,8 @@
         <% const formAction = typeof editMode !== 'undefined' && editMode ? `/admin/employee/edit/${employee._id}` : '/admin/employee/add'; %>
 
         <form action="<%= formAction %>" method="post" novalidate>
-            {# CSRF token placeholder - Needed if CSRF middleware is active #}
-            {# <input type="hidden" name="_csrf" value="<%= csrfToken %>"> #}
+            
+            
 
             <p>
                 <label for="name">Name:</label><br>

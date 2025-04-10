@@ -1,40 +1,23 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Document, Schema, Types } from 'mongoose';
 import { IEmployee } from './Employee'; // Import Employee type if needed elsewhere
 
 export interface IShift extends Document {
-  employee?: mongoose.Types.ObjectId | IEmployee; // Can be null/undefined if unassigned
-  start_time: Date;
-  end_time: Date;
+  shift_date: Date;
+  start_time: string; // e.g., "10:00"
+  end_time: string;   // e.g., "18:00"
   required_position: string;
-  // Mongoose automatically adds _id
+  assigned_employee: Types.ObjectId | IEmployee | null; // Reference to Employee
+  // Add any other fields like notes, actual_start/end, performance_log_ref etc.
 }
 
 const ShiftSchema: Schema = new Schema({
-  // Link to the Employee collection, store ObjectId
-  // Make it optional (nullable) by not setting required: true
-  employee: {
-    type: Schema.Types.ObjectId,
-    ref: 'Employee', // Reference to the 'Employee' model
-    index: true
-  },
-  start_time: {
-    type: Date,
-    required: true,
-    index: true
-  },
-  end_time: {
-    type: Date,
-    required: true
-  },
-  required_position: {
-    type: String,
-    required: true,
-    trim: true,
-    index: true
-  }
-}, {
-  timestamps: true // Adds createdAt, updatedAt
-});
+  shift_date: { type: Date, required: true },
+  start_time: { type: String, required: true }, // Added
+  end_time: { type: String, required: true },   // Added
+  required_position: { type: String, required: true, index: true },
+  assigned_employee: { type: Schema.Types.ObjectId, ref: 'Employee', default: null, index: true },
+  // Add other fields here
+}, { timestamps: true }); // Adds createdAt and updatedAt
 
 // Index for faster querying by date range
 ShiftSchema.index({ start_time: 1, end_time: 1 });

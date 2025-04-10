@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('./partials/head', { title: title }) %> {# Pass title to head partial #}
+</head>
+<body>
+    <%- include('./partials/navbar') %> {# Include navigation bar #}
+    <%- include('./partials/flash', { successFlash: successFlash, errorFlash: errorFlash }) %> {# Display flash messages #}
+
+    <div class="content-wrapper">
+        <h2><%= title %></h2> {# Display title passed from route #}
+
+        <p>Welcome to the Pozole Staff Scheduling application (Prototype 02).</p>
+
+        <p>Use the navigation bar to manage employees or view the schedule.</p>
+
+        {# Add links or other homepage content as needed #}
+        <ul>
+            <li><a href="/schedule">View Schedule</a></li>
+            <li><a href="/admin/employees">Manage Employees</a></li>
+            {# Links to performance sections can be added later #}
+        </ul>
+
+    </div> {# End content-wrapper #}
+
+</body>
+</html>

@@ -14,6 +14,13 @@
             <a href="/admin/employee/add" class="btn btn-primary">Add New Employee</a>
         </p>
 
+        <div class="my-4" style="margin-top: 20px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #ccc;">
+            <h3>Generate Schedule</h3>
+            <p>Generate required shifts based on forecast (existing shifts in the period will be replaced).</p>
+            <form action="/admin/generate-schedule" method="POST" style="display: inline-block;">
+                <button type="submit" class="btn btn-success">Generate Schedule for the Month</button>
+            </form>
+        </div>
         <%# Check if the employees variable exists and has data %>
         <% if (typeof employees !== 'undefined' && employees.length > 0) { %>
             <table class="schedule-table" border="1"> {# You can reuse or create specific CSS classes #}
