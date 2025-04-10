@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('partials/head') %> {# Include head partial #}
+</head>
+<body>
+    <%- include('partials/navbar') %> {# Include navbar partial #}
+    <%- include('partials/flash') %> {# Include flash message partial #}
+
+    <div class="content-wrapper">
+        <%- body %> {# Main content from specific page templates will be injected here #}
+    </div>
+
+    {# Include JS scripts if needed later #}
+    {# <script src="/js/script.js"></script> #}
+</body>
+</html>

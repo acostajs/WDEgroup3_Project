@@ -1,0 +1,26 @@
+{
+    "compilerOptions": {
+      "target": "ES2016",
+      "module": "CommonJS",
+      "outDir": "./dist",
+      "rootDir": "./src",
+      "strict": true,
+      "moduleResolution": "node", 
+      "esModuleInterop": true,
+      // "resolveJsonModule": true, // Allows importing JSON files directly (optional, useful for config)
+      // "baseUrl": "./",          // Base directory for non-relative module paths (optional)
+      // "paths": {},              // Path mapping relative to baseUrl (optional)
+  
+      "skipLibCheck": true,        
+      "forceConsistentCasingInFileNames": true, 
+      "sourceMap": true
+    },
+    "include": [
+      "src/**/*"
+    ],
+    "exclude": [
+      "node_modules",
+      "dist",        
+      "python_scripts"
+    ]
+  }

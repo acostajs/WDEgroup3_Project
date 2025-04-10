@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+     <%- include('../partials/head', { title: title }) %>
+</head>
+<body>
+    <%- include('../partials/navbar') %>
+    <%- include('../partials/flash', { successFlash: typeof successFlash !== 'undefined' ? successFlash : [], errorFlash: typeof errorFlash !== 'undefined' ? errorFlash : [] }) %>
+
+    <div class="content-wrapper">
+        <h2><%= title %></h2> {# Displays "Add New Employee" or "Edit Employee" #}
+
+        <%# Display validation errors if passed from the route %>
+        <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
+            <div style="color: red; border: 1px solid red; padding: 10px; margin-bottom: 15px;">
+                <strong>Please correct the following errors:</strong>
+                <ul>
+                    <% errors.forEach(error => { %>
+                        <li><%= error.msg %> <% if (error.path) { %>(Field: <%= error.path %>)<% } %></li>
+                    <% }); %>
+                </ul>
+            </div>
+        <% } %>
+
+        <%# Form action is different for add vs edit %>
+        <% const formAction = typeof editMode !== 'undefined' && editMode ? `/admin/employee/edit/${employee._id}` : '/admin/employee/add'; %>
+
+        <form action="<%= formAction %>" method="post" novalidate>
+            {# CSRF token placeholder - Needed if CSRF middleware is active #}
+            {# <input type="hidden" name="_csrf" value="<%= csrfToken %>"> #}
+
+            <p>
+                <label for="name">Name:</label><br>
+                <input type="text" id="name" name="name" size="40" class="form-control"
+                       value="<%= typeof employee !== 'undefined' && employee.name ? employee.name : '' %>" required>
+            </p>
+            <p>
+                <label for="position">Position:</label><br>
+                <%# !! Using text input temporarily. Replace with <select> later !! %>
+                 <input type="text" id="position" name="position" size="40" class="form-control"
+                       value="<%= typeof employee !== 'undefined' && employee.position ? employee.position : '' %>" required>
+                 <%# We'll need to pass POSITION_CHOICES from the route to populate a dropdown #%>
+            </p>
+             <p>
+                <label for="email">Email:</label><br>
+                <input type="email" id="email" name="email" size="40" class="form-control"
+                       value="<%= typeof employee !== 'undefined' && employee.email ? employee.email : '' %>" required>
+            </p>
+            <p>
+                <label for="hourly_rate">Hourly Rate ($):</label><br>
+                 <input type="number" id="hourly_rate" name="hourly_rate" class="form-control" size="10" step="0.01" min="0"
+                       value="<%= (typeof employee !== 'undefined' && employee.hourly_rate != null) ? employee.hourly_rate : '' %>">
+            </p>
+
+            <p><button type="submit" class="btn btn-primary">Save Employee</button></p>
+        </form>
+
+        <hr>
+        <p><a href="/admin/employees">Back to Employee List</a></p> {# Link back to list #}
+
+    </div> {# End content-wrapper #}
+
+</body>
+</html>
