@@ -18,18 +18,24 @@ Manual scheduling leads to inefficiencies, such as overstaffing during slow peri
 
 ## Technology Stack
 ### Option 1:
-- **Front-end: Vue.js
-- **Back-end: Typescript with Node.js
-- **Database: MariaDB
-- **Hosting: Still to decide
-- **Authentication: Still to Decide
+https://wdegroup3-prototype-01.onrender.com/index
+
+This prototype utilizes the following technologies, categorized by their role:
+Technology Stack Summary
+  - **Backend** -: Python, Flask, SQLAlchemy (ORM), Gunicorn (WSGI Server)
+  - **Frontend** -: HTML, CSS, Jinja2 (Templating)
+  - **Database** -: PostgreSQL (Hosted on Render), psycopg2-binary (Driver)
+  - **Key Libraries** -:
+    Pandas & Prophet (Forecasting)
+    Flask-WTF / WTForms (Web Forms)
+    Flask-Mail (Email Notifications)
+  - **DevOps & Hosting** -:
+    Docker & Docker Compose (Containerization)
+    Render (PaaS Cloud Hosting: Web Service & PostgreSQL Database)
+    Git & GitHub (Version Control & Code Repository)
 
 ### Option 2:
-- **Front-end:** Jinja2
-- **Back-end:** Python with flask
-- **Database:** SQLite
-- **Hosting:** Still to decide
-- **Authentication:** Still to decide
+
 
 This system aims to automate scheduling and improve efficiency, ensuring that the right employees work at the right times while optimizing labor costs.
 
