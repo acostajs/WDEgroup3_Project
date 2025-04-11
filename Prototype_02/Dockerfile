@@ -13,7 +13,7 @@ RUN pip3 install --break-system-packages -r python_scripts/requirements.txt
 
 COPY package*.json ./
 
-RUN npm install --production --ignore-scripts --prefer-offline
+RUN npm ci
 
 COPY tsconfig.json ./
 COPY src ./src
@@ -23,6 +23,8 @@ COPY data ./data
 COPY python_scripts ./python_scripts 
 
 RUN npm run build
+
+RUN npm prune --production
 
 EXPOSE 3000
 
