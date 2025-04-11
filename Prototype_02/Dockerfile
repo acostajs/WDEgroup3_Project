@@ -13,7 +13,7 @@ RUN pip3 install --break-system-packages -r python_scripts/requirements.txt
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm install --production --ignore-scripts --prefer-offline
 
 COPY tsconfig.json ./
 COPY src ./src
@@ -22,7 +22,7 @@ COPY public ./public
 COPY data ./data
 COPY python_scripts ./python_scripts 
 
-RUN npm run build # Now 'tsc' (from typescript devDep) is available
+RUN npm run build
 
 EXPOSE 3000
 
