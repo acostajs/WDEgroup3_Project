@@ -1,25 +1,28 @@
 FROM node:20-slim
 
-ENV NODE_ENV production # Set default environment (can be overridden)
+ENV NODE_ENV production
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONDONTWRITEBYTECODE 1
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install --production --ignore-scripts --prefer-offline
-
 RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip && rm -rf /var/lib/apt/lists/*
-
 COPY python_scripts/requirements.txt ./python_scripts/requirements.txt
 
-RUN pip3 install --no-cache-dir --break-system-packages -r python_scripts/requirements.txt
+RUN pip3 install --break-system-packages -r python_scripts/requirements.txt
 
-COPY . .
+COPY package*.json ./
+
+RUN npm install
 
 COPY tsconfig.json ./
+COPY src ./src
+COPY views ./views 
+COPY public ./public
+COPY data ./data
+COPY python_scripts ./python_scripts 
 
-RUN npm run build # Compile TS to JS in /app/dist/
+RUN npm run build # Now 'tsc' (from typescript devDep) is available
 
 EXPOSE 3000
 
