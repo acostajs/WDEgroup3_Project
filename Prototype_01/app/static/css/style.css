@@ -1,13 +1,11 @@
-/* app/static/css/style.css */
-
 /* --- Basic Reset / Body Style --- */
 body {
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; /* Common system fonts */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
     line-height: 1.6;
-    background-color: #f8f9fa; /* Light grey page background */
-    color: #212529; /* Dark text */
+    background-color: #f8f9fa; 
+    color: #212529; 
 }
 
 /* --- Navigation Bar --- */
@@ -16,8 +14,8 @@ body {
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background-color: #343a40; /* Dark grey background */
-    border-bottom: 3px solid #ffc107; /* Yellow accent */
+    background-color: #343a40; 
+    border-bottom: 3px solid #ffc107; 
 }
 
 .navbar li {
@@ -30,40 +28,40 @@ body {
     text-align: center;
     padding: 14px 16px;
     text-decoration: none;
-    transition: background-color 0.3s ease; /* Smooth hover */
+    transition: background-color 0.3s ease; 
 }
 
 .navbar li a:hover {
-    background-color: #495057; /* Slightly lighter dark */
-    color: #ffc107; /* Yellow text on hover */
+    background-color: #495057; 
+    color: #ffc107; 
 }
 
 /* --- Content Wrapper --- */
 .content-wrapper {
-    padding: 25px; /* More padding */
-    max-width: 1200px; /* Max width for content */
-    margin: 30px auto; /* Center content area, add margin from navbar */
-    background-color: #ffffff; /* White background for content */
-    box-shadow: 0 2px 15px rgba(0,0,0,0.1); /* Slightly stronger shadow */
-    border-radius: 8px; /* Rounded corners */
+    padding: 25px; 
+    max-width: 1200px; 
+    margin: 30px auto; 
+    background-color: #ffffff; 
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1); 
+    border-radius: 8px; 
 }
 
 /* --- Headings --- */
 h1, h2, h3, h4 {
-    color: #495057; /* Dark grey heading color */
+    color: #495057; 
     margin-top: 1.2em;
     margin-bottom: 0.6em;
     line-height: 1.3;
 }
-h1 { font-size: 2.2em; } /* Main page title */
-h2 { font-size: 1.8em; border-bottom: 1px solid #dee2e6; padding-bottom: 0.4em; margin-bottom: 1em;} /* Section titles */
+h1 { font-size: 2.2em; } 
+h2 { font-size: 1.8em; border-bottom: 1px solid #dee2e6; padding-bottom: 0.4em; margin-bottom: 1em;} 
 h3 { font-size: 1.5em; }
-h4 { font-size: 1.2em; color: #6c757d; } /* Sub-sections like week headers */
+h4 { font-size: 1.2em; color: #6c757d; } 
 
 
 /* --- Links --- */
 a {
-    color: #007bff; /* Standard blue link */
+    color: #007bff; 
     text-decoration: none;
 }
 a:hover {
@@ -77,28 +75,28 @@ table {
     width: 100%;
     margin-top: 15px;
     margin-bottom: 20px;
-    border: 1px solid #dee2e6; /* Lighter border */
-    font-size: 0.95em; /* Slightly smaller table font */
+    border: 1px solid #dee2e6;
+    font-size: 0.95em; 
 }
 
 th, td {
     border: 1px solid #dee2e6;
-    padding: 10px 14px; /* Consistent padding */
+    padding: 10px 14px; 
     text-align: left;
     vertical-align: top;
 }
 
 thead th {
-    background-color: #e9ecef; /* Light grey header */
-    font-weight: 600; /* Slightly bolder */
+    background-color: #e9ecef; 
+    font-weight: 600; 
     border-bottom-width: 2px;
 }
 
-tbody tr:nth-child(even) { /* Use even for striping */
-    background-color: #f8f9fa; /* Subtle striping */
+tbody tr:nth-child(even) { 
+    background-color: #f8f9fa; 
 }
 
-tbody tr:hover { /* Add hover effect to rows */
+tbody tr:hover { 
     background-color: #e9ecef;
 }
 
@@ -106,10 +104,10 @@ tfoot {
     font-weight: bold;
     background-color: #e9ecef;
 }
-td[style*="text-align: right;"] { /* Keep right alignment for costs */
+td[style*="text-align: right;"] { 
     text-align: right;
 }
-td[style*="text-align: center;"] { /* Keep center alignment */
+td[style*="text-align: center;"] { 
     text-align: center;
 }
 
@@ -121,12 +119,12 @@ input[type="text"],
 input[type="email"],
 input[type="date"],
 input[type="number"],
-input[type="password"], /* Added just in case */
+input[type="password"], 
 select,
 textarea {
-    display: block; /* Make them block level */
-    width: 100%; /* Take available width */
-    max-width: 450px; /* Limit max width */
+    display: block; 
+    width: 100%; 
+    max-width: 450px; 
     padding: 0.5rem 0.75rem;
     font-size: 1rem;
     line-height: 1.5;
@@ -137,7 +135,7 @@ textarea {
     border-radius: 0.25rem;
     transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
 }
-input:focus, select:focus, textarea:focus { /* Add focus style */
+input:focus, select:focus, textarea:focus { 
     border-color: #80bdff;
     outline: 0;
     box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
@@ -192,11 +190,11 @@ input[type="submit"]:hover,
 }
 
 /* --- Validation Errors --- */
-span[style*="color: red;"] { /* Simple targeting based on WTForms default */
+span[style*="color: red;"] { 
     font-size: 0.875em;
     font-weight: bold;
-    color: #dc3545 !important; /* Override default red with a bootstrap-like danger color */
-    display: block; /* Make error appear on new line */
+    color: #dc3545 !important; 
+    display: block; 
     margin-top: 0.25rem;
 }
 

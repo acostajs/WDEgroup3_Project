@@ -1,12 +1,10 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-// Interface defining the structure of an Employee document (for TypeScript)
 export interface IEmployee extends Document {
   name: string;
   position: string;
   email: string;
-  hourly_rate?: number; // Optional field
-  // Mongoose automatically adds _id
+  hourly_rate?: number; 
 }
 
 // Mongoose Schema definition
@@ -14,8 +12,8 @@ const EmployeeSchema: Schema = new Schema({
   name: {
     type: String,
     required: [true, 'Employee name is required.'],
-    trim: true, // Removes leading/trailing whitespace
-    index: true // Add index for faster searching by name
+    trim: true, 
+    index: true 
   },
   position: {
     type: String,
@@ -26,10 +24,10 @@ const EmployeeSchema: Schema = new Schema({
   email: {
     type: String,
     required: [true, 'Email is required.'],
-    unique: true, // Ensure email is unique in the collection
-    lowercase: true, // Store email in lowercase
+    unique: true, 
+    lowercase: true, 
     trim: true,
-    match: [/.+\@.+\..+/, 'Please fill a valid email address'], // Basic email format validation
+    match: [/.+\@.+\..+/, 'Please fill a valid email address'], 
     index: true
   },
   hourly_rate: {
@@ -37,8 +35,7 @@ const EmployeeSchema: Schema = new Schema({
     min: [0, 'Hourly rate cannot be negative.']
   }
 }, {
-  timestamps: true // Automatically add createdAt and updatedAt fields
+  timestamps: true 
 });
 
-// Create and export the Mongoose model
 export default mongoose.model<IEmployee>('Employee', EmployeeSchema);

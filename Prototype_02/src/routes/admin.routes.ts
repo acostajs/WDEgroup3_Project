@@ -52,7 +52,7 @@ adminRouter.get('/employees', async (req: Request, res: Response, next: NextFunc
   } catch (error) {
     req.flash('error', 'Error loading employee list.');
     console.error("Error in GET /admin/employees:", error);
-    res.redirect('/'); // Redirect to home or a dashboard on error
+    res.redirect('/'); 
   }
 });
 
@@ -63,7 +63,7 @@ adminRouter.get('/employee/add', (req: Request, res: Response) => {
     employee: {},
     errors: [],
     editMode: false,
-    positions: ALLOWED_POSITIONS, // <-- Add this line
+    positions: ALLOWED_POSITIONS, 
     successFlash: req.flash('success'),
     errorFlash: req.flash('error')
   });
@@ -72,17 +72,16 @@ adminRouter.get('/employee/add', (req: Request, res: Response) => {
 // --- Add Employee Route (POST /admin/employee/add) ---
 adminRouter.post(
   '/employee/add',
-  employeeValidationRules, // Apply validation rules
+  employeeValidationRules,
   async (req: Request, res: Response, next: NextFunction) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      // Validation failed
       return res.status(400).render('admin/employee_form', {
         title: 'Add New Employee',
         employee: req.body,
         errors: errors.array(),
         editMode: false,
-        positions: ALLOWED_POSITIONS, // <-- Add this line
+        positions: ALLOWED_POSITIONS, 
         successFlash: req.flash('success'),
         errorFlash: req.flash('error')
       });
@@ -94,17 +93,14 @@ adminRouter.post(
       req.flash('success', `Employee "${newEmployee.name}" added successfully!`);
       res.redirect('/admin/employees');
     } catch (error: any) {
-       // Handle potential errors from the service (e.g., duplicate email)
        req.flash('error', error.message || 'Error adding employee.');
-       // It might be better to log the full error on the server side
        console.error("Error in POST /admin/employee/add:", error);
-       // Re-render form with error
        res.status(400).render('admin/employee_form', {
           title: 'Add New Employee',
-          employee: req.body, // Send back submitted data
-          errors: [{ msg: error.message }], // Show service error message
+          employee: req.body, 
+          errors: [{ msg: error.message }], 
           editMode: false,
-          successFlash: req.flash('success'), // Pass flash messages
+          successFlash: req.flash('success'), 
           errorFlash: req.flash('error')
       });
     }
@@ -114,7 +110,6 @@ adminRouter.post(
 // --- Edit Employee Route (GET /admin/employee/edit/:id) ---
 adminRouter.get('/employee/edit/:id', async (req: Request, res: Response, next: NextFunction) => {
     const employeeId = req.params.id;
-    // Validate ID format
     if (!mongoose.Types.ObjectId.isValid(employeeId)) {
         req.flash('error', 'Invalid Employee ID format.');
         return res.redirect('/admin/employees');
@@ -130,7 +125,7 @@ adminRouter.get('/employee/edit/:id', async (req: Request, res: Response, next: 
           employee: employee,
           errors: [],
           editMode: true,
-          positions: ALLOWED_POSITIONS, // <-- Add this line
+          positions: ALLOWED_POSITIONS, 
           successFlash: req.flash('success'),
           errorFlash: req.flash('error')
         }); 
@@ -144,10 +139,9 @@ adminRouter.get('/employee/edit/:id', async (req: Request, res: Response, next: 
 // --- Edit Employee Route (POST /admin/employee/edit/:id) ---
 adminRouter.post(
     '/employee/edit/:id',
-    employeeValidationRules, // Apply validation rules
+    employeeValidationRules, 
     async (req: Request, res: Response, next: NextFunction) => {
         const employeeId = req.params.id;
-        // Validate ID format
         if (!mongoose.Types.ObjectId.isValid(employeeId)) {
              req.flash('error', 'Invalid Employee ID format.');
              return res.redirect('/admin/employees');
@@ -155,15 +149,13 @@ adminRouter.post(
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            // Validation failed, re-render form with errors and existing data
-            // Fetch original employee again only if needed to populate fields not in req.body
-            const submittedData = { ...req.body, _id: employeeId }; // Ensure _id is preserved if needed by form
+            const submittedData = { ...req.body, _id: employeeId }; 
             return res.status(400).render('admin/employee_form', {
               title: 'Edit Employee',
               employee: { /* ... submitted data ... */ },
               errors: errors.array(),
               editMode: true,
-              positions: ALLOWED_POSITIONS, // <-- Add this line
+              positions: ALLOWED_POSITIONS, 
               successFlash: req.flash('success'),
               errorFlash: req.flash('error')
             });
@@ -173,24 +165,20 @@ adminRouter.post(
         try {
             const updatedEmployee = await employeeService.updateEmployee(employeeId, req.body);
             if (!updatedEmployee) {
-                 // Should ideally not happen if ID was valid, but handle defensively
                  req.flash('error', 'Employee not found during update.');
                  return res.redirect('/admin/employees');
             }
             req.flash('success', `Employee "${updatedEmployee.name}" updated successfully!`);
             res.redirect('/admin/employees');
         } catch (error: any) {
-            // Handle potential errors from the service (e.g., duplicate email on update)
             req.flash('error', error.message || 'Error updating employee.');
-            // Log the full error on the server side
             console.error("Error in POST /admin/employee/edit:", error);
-             // Re-render form with error
              res.status(400).render('admin/employee_form', {
                 title: 'Edit Employee',
-                employee: { _id: employeeId, ...req.body }, // Repopulate with submitted data
-                errors: [{ msg: error.message }], // Show service error message
+                employee: { _id: employeeId, ...req.body }, 
+                errors: [{ msg: error.message }], 
                 editMode: true,
-                successFlash: req.flash('success'), // Pass flash messages
+                successFlash: req.flash('success'), 
                 errorFlash: req.flash('error')
             });
         }
@@ -206,16 +194,16 @@ adminRouter.post('/employee/delete/:id', async (req: Request, res: Response, nex
              return res.redirect('/admin/employees');
      }
     try {
-        // Check for related data before deleting (optional but good practice)
-        const hasShifts = await Shift.exists({ assigned_employee: employeeId }); // Ensure field name is correct
-        const hasLogs = await PerformanceLog.exists({ employee: employeeId }); // Ensure field name is correct
+
+        const hasShifts = await Shift.exists({ assigned_employee: employeeId }); 
+        const hasLogs = await PerformanceLog.exists({ employee: employeeId }); 
 
         if (hasShifts || hasLogs) {
              const relations = [];
              if (hasShifts) relations.push("shifts");
              if (hasLogs) relations.push("performance logs");
              req.flash('error', `Cannot delete employee. They have existing ${relations.join(' and ')}.`)
-             return res.redirect('/admin/employees'); // Stop deletion
+             return res.redirect('/admin/employees'); 
         }
 
         // Proceed with deletion
@@ -223,39 +211,35 @@ adminRouter.post('/employee/delete/:id', async (req: Request, res: Response, nex
         if (success) {
             req.flash('success', 'Employee deleted successfully.');
         } else {
-            // Should ideally not happen if ID was valid, but handle defensively
             req.flash('error', 'Employee not found for deletion.');
         }
     } catch (error: any) {
         req.flash('error', error.message || 'Error deleting employee.');
         console.error("Error in POST /admin/employee/delete:", error);
     }
-    // Redirect back to the list in all cases (success, not found, error)
     res.redirect('/admin/employees');
 });
 
 
-// --- Test Forecast Route (GET /admin/test-forecast) ---
-// Note: forecastingService.generateForecast likely needs implementation or adjustment
+// --- Test Forecast Route (GET /admin/test-forecast) --- //
 adminRouter.get('/test-forecast', async (req: Request, res: Response, next: NextFunction) => {
-  const daysToPredict = 14; // Or get from query: req.query.days
+  const daysToPredict = 14; 
   console.log(`Accessed /admin/test-forecast route, predicting ${daysToPredict} days.`);
   try {
-      // Assuming forecastingService.getForecast exists and returns parsed data
       const forecastData = await forecastingService.generateForecast(daysToPredict);
       console.log("[Route] Forecast service call successful.");
-      res.json(forecastData); // Send the forecast data as JSON response
+      res.json(forecastData); 
   } catch (error: any) {
       console.error("[Route] Error in /admin/test-forecast:", error);
       res.status(500).json({
            message: "Error generating or retrieving forecast.",
-           error: error.message || String(error) // Provide error message
+           error: error.message || String(error) 
       });
   }
 });
 
 
-// --- Generate Schedule Route (POST /admin/generate-schedule) --- // <-- Added Route
+// --- Generate Schedule Route (POST /admin/generate-schedule) --- // 
 adminRouter.post('/generate-schedule', async (req: Request, res: Response, next: NextFunction) => {
 
   try {
@@ -326,21 +310,20 @@ adminRouter.post('/assign-schedule', async (req: Request, res: Response, next: N
 // --- Add Performance Log Route (GET) ---
 adminRouter.get('/performance/add', async (req: Request, res: Response, next: NextFunction) => {
   try {
-      // Fetch all employees to populate the dropdown
       const employees = await employeeService.getAllEmployees();
 
       res.render('admin/performance_log_form', {
           title: 'Log Performance Review',
-          employees: employees, // Pass employees to the view
-          log: {}, // Empty object for initial form state
-          errors: [], // Empty errors array
+          employees: employees, 
+          log: {}, 
+          errors: [], 
           successFlash: req.flash('success'),
           errorFlash: req.flash('error')
       });
   } catch (error) {
       console.error('[Route GET /admin/performance/add] Error fetching employees:', error);
       req.flash('error', 'Failed to load performance log form.');
-      res.redirect('/admin'); // Redirect to main admin or employee list
+      res.redirect('/admin'); 
   }
 });
 
@@ -362,27 +345,24 @@ adminRouter.post(
               return res.status(400).render('admin/performance_log_form', {
                   title: 'Log Performance Review',
                   employees: employees,
-                  log: submittedData, // Pass back submitted data
-                  errors: errors.array(), // Pass validation errors
+                  log: submittedData, 
+                  errors: errors.array(), 
                   successFlash: req.flash('success'),
                   errorFlash: req.flash('error')
               });
           } catch (fetchError) {
                console.error('[Route POST /admin/performance/add] Error fetching employees after validation error:', fetchError);
                req.flash('error', 'An error occurred while reloading the form.');
-               return res.redirect('/admin/employees'); // Redirect somewhere safe
+               return res.redirect('/admin/employees'); 
           }
       }
 
       // Validation passed: Attempt to save the log
       try {
-          // req.body now contains validated and potentially sanitized/coerced data
-          // Note: rating might be undefined if not provided, which is okay
           const newLog = await performanceService.createPerformanceLog(req.body);
 
-          req.flash('success', `Performance log added successfully for employee.`); // Consider adding employee name if needed
-          // Redirect to a dashboard or list view once created
-          res.redirect('/admin/employees'); // Redirecting to employee list for now
+          req.flash('success', `Performance log added successfully for employee.`); 
+          res.redirect('/admin/employees'); 
 
       } catch (error: any) {
           console.error('[Route POST /admin/performance/add] Error saving performance log:', error);
@@ -419,14 +399,14 @@ adminRouter.get('/performance/dashboard', async (req: Request, res: Response, ne
 
       res.render('admin/performance_dashboard', {
           title: 'Performance Dashboard',
-          logs: performanceLogs, // Pass logs to the view
+          logs: performanceLogs, 
           successFlash: req.flash('success'),
           errorFlash: req.flash('error')
       });
   } catch (error) {
       console.error('[Route GET /admin/performance/dashboard] Error fetching logs:', error);
       req.flash('error', 'Failed to load performance dashboard.');
-      res.redirect('/admin/employees'); // Redirect somewhere safe on error
+      res.redirect('/admin/employees'); 
   }
 });
 

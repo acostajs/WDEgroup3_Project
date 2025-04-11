@@ -138,8 +138,4 @@ def schedule_view():
         return redirect(url_for("main.index"))
 
 
-# --- Add any other routes using @bp.route(...) ---
-# Example:
-# @bp.route('/schedule')
-# def schedule():
-#     return render_template('schedule_view.html', title='Schedule')
+

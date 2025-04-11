@@ -13,8 +13,6 @@
           <li><a href="{{ url_for('admin.performance_dashboard') }}">Performance Dashboard</a></li>
           <li><a href="{{ url_for('admin.add_performance_log') }}">Log Performance</a></li>
           <li><a href="{{ url_for('admin.list_employees') }}">Manage Employees</a></li>
-          
-          {# <li><a href="{{ url_for('main.generate_schedule_route') }}">(Re)Generate Schedule</a></li> #}
       </ul>
   </nav>
 
@@ -30,8 +28,6 @@
     {% endwith %}
 
     <div class="content-wrapper">
-        {# Main heading can be inside the content block if preferred, or here #}
-        {# <h1>Pozole Staff Scheduler</h1> <hr> #}
         {% block content %}{% endblock %} 
     </div>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>

@@ -1,6 +1,3 @@
-# app/utils/scheduling.py
-# Replace entire file content with this:
-
 from app import db
 from app.models import Employee, Shift
 from . import forecasting
@@ -11,12 +8,11 @@ import random
 import pandas as pd
 from collections import defaultdict
 import calendar
-import logging  # Added for slightly better logging
+import logging  
 
-# Configure logger (optional, but good practice)
 log = logging.getLogger(__name__)
-logging.getLogger("cmdstanpy").setLevel(logging.WARNING)  # Suppress cmdstanpy info
-logging.getLogger("prophet").setLevel(logging.WARNING)  # Suppress prophet info
+logging.getLogger("cmdstanpy").setLevel(logging.WARNING)  
+logging.getLogger("prophet").setLevel(logging.WARNING)  
 
 
 # --- Define Shift Times & Staffing Rules ---
@@ -27,8 +23,6 @@ DAY_SHIFT_END = datetime.time(18, 0)  #  6:00 PM (8 hours)
 EVE_SHIFT_START = datetime.time(16, 0)  #  4:00 PM
 EVE_SHIFT_END = datetime.time(0, 0)  # 12:00 AM Midnight
 
-# Staffing Needs: How many of each position per shift type (Day/Eve)
-# REVIEW THESE NUMBERS - Especially for 'Day' shift estimates
 BASE_NEEDS = {
     "Day": {  # 10:00 - 18:00 Estimate
         "Manager": 1,
@@ -39,7 +33,6 @@ BASE_NEEDS = {
         "Cook": 2,
         "Dishwasher": 1,
         "Chef": 1,
-        # Add other positions if needed, ensure names match Employee positions
     },
     "Eve": {  # 16:00 - 00:00 (Peak)
         "Manager": 1,
@@ -50,20 +43,16 @@ BASE_NEEDS = {
         "Cook": 4,
         "Dishwasher": 2,
         "Sous Chef": 1,
-        # Add other positions if needed
     },
 }
 
 # Optional: Extra staff needed only if forecast demand is high
 HIGH_DEMAND_EXTRA = {
-    "Eve": {"Server": 2, "Cook": 2}  # Example: Add 2 Servers, 2 Cooks on busy evenings
+    "Eve": {"Server": 2, "Cook": 2}  
 }
 
-# Demand threshold from forecast (yhat) to trigger extra staff
+
 DEMAND_THRESHOLD = 175  # Adjust as needed
-
-# --- End Definitions ---
-
 
 def create_schedule(target_date=None):
     """
@@ -74,9 +63,9 @@ def create_schedule(target_date=None):
     log.info("--- Starting Advanced Schedule Generation ---")
     employee_shifts_to_notify = defaultdict(
         list
-    )  # Store assigned shifts for notifications {emp_id: [shift1, shift2]}
-    employees_scheduled_this_run = {}  # Store employee objects for easy lookup {emp_id: employee_obj}
-    shifts_to_add_to_session = []  # Collect ALL shifts (assigned and unassigned)
+    )  
+    employees_scheduled_this_run = {}  
+    shifts_to_add_to_session = []  
 
     try:
         # 1. Determine Target Month
@@ -189,9 +178,9 @@ def create_schedule(target_date=None):
                                 required_position=position,
                             )
                             shifts_to_add_to_session.append(new_shift)
-                        continue  # Move to next position
+                        continue  
 
-                    # We have employees, try to assign them
+                    
                     shuffled_available = random.sample(
                         available_for_pos, len(available_for_pos)
                     )
@@ -201,18 +190,18 @@ def create_schedule(target_date=None):
                         f"      Available {position}s: {len(shuffled_available)}. Assigning up to: {count_needed}"
                     )
 
-                    for i in range(count_needed):  # Loop for the number of slots needed
+                    for i in range(count_needed): 
                         assigned_employee = None
-                        # Find next available unique employee from shuffled list
+                        
                         for emp in shuffled_available:
-                            # Check if not already assigned to THIS specific shift block
-                            # WARNING: Doesn't check for overlaps with OTHER shifts yet
+                        
+                        
                             if emp.id not in assigned_employee_ids_this_slot_type:
                                 assigned_employee = emp
                                 assigned_employee_ids_this_slot_type.add(emp.id)
                                 break  # Found one
 
-                        # Create the shift object (assigned or unassigned)
+                        
                         new_shift = Shift(
                             employee_id=assigned_employee.id
                             if assigned_employee
@@ -223,7 +212,7 @@ def create_schedule(target_date=None):
                         )
                         shifts_to_add_to_session.append(
                             new_shift
-                        )  # Add to list for saving
+                        ) 
 
                         if assigned_employee:
                             log.debug(
@@ -234,15 +223,12 @@ def create_schedule(target_date=None):
                             )
                             employee_shifts_to_notify[assigned_employee.id].append(
                                 new_shift
-                            )  # Add to notification list
+                            ) 
                         else:
                             log.warning(
                                 f"      -> No further available {position} found for slot {i + 1}/{count_needed}. Created UNASSIGNED shift."
                             )
-                    # --- End loop for assigning count_needed ---
-                # --- End loop for positions ---
-            # --- End loop for shift_type ---
-        # --- End loop for days ---
+  
 
         # 6. Add all prepared shifts and commit
         if shifts_to_add_to_session:
@@ -259,7 +245,7 @@ def create_schedule(target_date=None):
             notification_fail_count = 0
             for emp_id, shifts_list in employee_shifts_to_notify.items():
                 employee = employees_scheduled_this_run.get(emp_id)
-                if employee and employee.email:  # Check for email here too
+                if employee and employee.email:  
                     log.info(
                         f"Attempting to send notification to {employee.name} ({employee.email})..."
                     )
@@ -283,7 +269,7 @@ def create_schedule(target_date=None):
             )
 
         else:
-            # Only commit if only deletes happened
+           
             db.session.commit()
             log.info(
                 f"No new shifts generated for {month_name_str}. Existing shifts for month cleared."
@@ -296,7 +282,7 @@ def create_schedule(target_date=None):
         log.error(
             f"ERROR during schedule generation for {target_date.strftime('%B %Y') if target_date else 'current month'}: {e}",
             exc_info=True,
-        )  # Log exception info
+        ) 
         return False
     finally:
         log.info("--- Schedule Generation Process Finished ---")

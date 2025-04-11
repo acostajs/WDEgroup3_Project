@@ -3,22 +3,17 @@
 {% block content %}
     <h2>Log Employee Performance</h2>
 
-    {# The form tag points back to the same URL for POST #}
     <form action="" method="post" novalidate>
-        {# IMPORTANT: Include hidden tag for CSRF protection and other hidden fields #}
         {{ form.hidden_tag() }}
 
-        {# Render Employee Dropdown Field #}
         <p>
             {{ form.employee.label }}<br>
-            {{ form.employee(class_='form-control') }} {# You can add CSS classes #}
-            {# Display validation errors for this field #}
+            {{ form.employee(class_='form-control') }} 
             {% if form.employee.errors %}
                 <br><span style="color: red;">[{{ ', '.join(form.employee.errors) }}]</span>
             {% endif %}
         </p>
 
-        {# Render Log Date Field #}
         <p>
             {{ form.log_date.label }}<br>
             {{ form.log_date(class_='form-control') }}
@@ -27,7 +22,6 @@
             {% endif %}
         </p>
 
-        {# Render Rating Field #}
         <p>
             {{ form.rating.label }}<br>
             {{ form.rating(class_='form-control', size=5, step='0.5') }}
@@ -36,7 +30,6 @@
             {% endif %}
         </p>
 
-        {# Render Notes Field #}
         <p>
             {{ form.notes.label }}<br>
             {{ form.notes(rows=4, cols=40, class_='form-control') }}
@@ -45,7 +38,6 @@
             {% endif %}
         </p>
 
-        {# Render Submit Button #}
         <p>{{ form.submit(class_='btn btn-primary') }}</p>
     </form>
 

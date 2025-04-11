@@ -18,11 +18,11 @@ const config = {
 };
 
 if (!config.emailUser || !config.emailPass || !config.emailFrom.includes('@')) {
-  if(!config.emailService) { // Allow service name instead of host/port
+  if(!config.emailService) {
      if(!config.emailHost) {
           console.warn('!!! WARNING: Email configuration missing or incomplete in .env file. Email sending may fail.');
      }
-  } else if (!config.emailHost) { // If service name is set, host/port might be optional
+  } else if (!config.emailHost) {
      console.log(`>>> Using email service name: ${config.emailService}`);
   }
 }

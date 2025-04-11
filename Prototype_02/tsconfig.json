@@ -7,10 +7,6 @@
       "strict": true,
       "moduleResolution": "node", 
       "esModuleInterop": true,
-      // "resolveJsonModule": true, // Allows importing JSON files directly (optional, useful for config)
-      // "baseUrl": "./",          // Base directory for non-relative module paths (optional)
-      // "paths": {},              // Path mapping relative to baseUrl (optional)
-  
       "skipLibCheck": true,        
       "forceConsistentCasingInFileNames": true, 
       "sourceMap": true

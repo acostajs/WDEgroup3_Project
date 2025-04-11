@@ -5,17 +5,14 @@ import './services/notificationService';
 
 const startServer = async () => {
   try {
-    // Connect to Database FIRST
     await connectDB();
-
-    // Start Express server AFTER successful DB connection
     app.listen(config.port, () => {
       console.log(`Server listening on port ${config.port}`);
       console.log(`Access local app at: http://localhost:${config.port}`);
     });
   } catch (error: any) {
     console.error('Error during server startup:', error.message);
-    process.exit(1); // Exit if essential startup steps fail
+    process.exit(1); 
   }
 };
 

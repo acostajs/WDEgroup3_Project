@@ -3,7 +3,6 @@
 {% block content %}
     <h2>Performance Dashboard</h2>
 
-    {# Check if the 'logs' list passed from the route contains any items #}
     {% if logs %}
         <table border="1" style="border-collapse: collapse; width: 100%; margin-top: 15px;">
             <thead>
@@ -16,15 +15,11 @@
                 </tr>
             </thead>
             <tbody>
-                {# Loop through each performance log object in the 'logs' list #}
                 {% for log in logs %}
                     <tr>
                         <td style="padding: 8px;">{{ log.log_date.strftime('%Y-%m-%d') }}</td>
-                        {# Access employee name via the relationship loaded in the query #}
                         <td style="padding: 8px;">{{ log.employee.name if log.employee else 'N/A' }}</td>
-                        {# Use the 'default' filter to show '-' if value is None or 0 #}
                         <td style="padding: 8px; text-align: center;">{{ log.rating|default('-', true) }}</td>
-                        {# Use 'default' for notes too, showing empty string if None #}
                         <td style="padding: 8px;">{{ log.notes|default('', true) }}</td>
                         <td style="padding: 8px;">{{ log.recorded_at.strftime('%Y-%m-%d %H:%M') if log.recorded_at else '-' }}</td>
                     </tr>
@@ -32,7 +27,6 @@
             </tbody>
         </table>
     {% else %}
-        {# Displayed if the 'logs' list was empty #}
         <p style="margin-top: 15px;">No performance logs have been recorded yet.</p>
         <p>You can <a href="{{ url_for('admin.add_performance_log') }}">add a performance log here</a>.</p>
     {% endif %}

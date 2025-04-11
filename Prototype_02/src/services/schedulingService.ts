@@ -1,13 +1,13 @@
-import Shift, { IShift } from '../models/Shift'; // Ensure IShift includes start_time, end_time
-import Employee, { IEmployee } from '../models/Employee'; // We might need this later for assignments
+import Shift, { IShift } from '../models/Shift'; 
+import Employee, { IEmployee } from '../models/Employee'; 
 import * as forecastingService from './forecastingService';
-import mongoose from 'mongoose'; // Ensure mongoose is imported for Types.ObjectId
+import mongoose from 'mongoose'; 
 import * as notificationService from './notificationService';
 
 function shuffleArray<T>(array: T[]): T[] {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+        [array[i], array[j]] = [array[j], array[i]]; 
     }
     return array;
 }
@@ -20,10 +20,10 @@ function createUTCDateTime(baseDate: Date, timeStr: string): Date {
 }
 
 function getWeekStartDate(date: Date): Date {
-    const dateCopy = new Date(date.getTime()); // Clone date
-    const dayOfWeek = dateCopy.getUTCDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-    dateCopy.setUTCDate(dateCopy.getUTCDate() - dayOfWeek); // Go back to Sunday
-    dateCopy.setUTCHours(0, 0, 0, 0); // Set to beginning of the day UTC
+    const dateCopy = new Date(date.getTime()); 
+    const dayOfWeek = dateCopy.getUTCDay(); 
+    dateCopy.setUTCDate(dateCopy.getUTCDate() - dayOfWeek); 
+    dateCopy.setUTCHours(0, 0, 0, 0); 
     return dateCopy;
 }
 
@@ -127,7 +127,7 @@ export const generateSchedule = async (targetStartDate: Date, targetEndDate: Dat
 };
 
 /**
- * Fetches shifts... (getShiftsForPeriod function - unchanged from your paste)
+ * Fetches shifts... 
  */
 export const getShiftsForPeriod = async (startDate: Date, endDate: Date): Promise<IShift[]> => {
     console.log(`[Scheduling Service] Fetching shifts from ${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`);
@@ -151,7 +151,6 @@ export const getShiftsForPeriod = async (startDate: Date, endDate: Date): Promis
 /**
  * Assigns employees... (assignEmployeesToShifts function - MODIFIED)
  */
-// REPLACE only the assignEmployeesToShifts function with this:
 
 export const assignEmployeesToShifts = async (startDate: Date, endDate: Date): Promise<number> => {
     const monthFormatter = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
@@ -181,13 +180,13 @@ export const assignEmployeesToShifts = async (startDate: Date, endDate: Date): P
         if (unassignedShifts.length === 0) { console.log('[Assignment Service] No unassigned shifts found. Assignment complete.'); return 0; }
 
         // 3. Track assignments & hours during THIS run
-        const employeeAssignmentsThisRun = new Map<string, { start: Date, end: Date }[]>(); // For overlaps
-        const employeeHoursPerWeek = new Map<string, number>(); // Key: "employeeId_weekStartDateStr", Value: hours
+        const employeeAssignmentsThisRun = new Map<string, { start: Date, end: Date }[]>(); 
+        const employeeHoursPerWeek = new Map<string, number>(); 
         const assignmentsToMake: { shiftId: mongoose.Types.ObjectId, employeeId: mongoose.Types.ObjectId }[] = [];
 
         // 4. Iterate through shifts and attempt assignment
         console.log('[Assignment Service] Attempting assignments with overlap & hour limit check...');
-        for (const shift of unassignedShifts) { // No :IShift needed if TS allows
+        for (const shift of unassignedShifts) { 
             const requiredPos = shift.required_position;
             const availableCandidates = employeesByPosition[requiredPos] || [];
 
@@ -199,11 +198,11 @@ export const assignEmployeesToShifts = async (startDate: Date, endDate: Date): P
 
                 // Determine the week identifier for this shift
                 const weekStartDate = getWeekStartDate(shift.shift_date);
-                const weekStartDateString = weekStartDate.toISOString().split('T')[0]; // "YYYY-MM-DD"
+                const weekStartDateString = weekStartDate.toISOString().split('T')[0]; 
 
                 let assigned = false;
-                for (const candidate of shuffledCandidates) { // No :IEmployee needed if TS allows
-                    const candidateIdStr = (candidate as any)._id.toString(); // Using 'as any' from previous fix
+                for (const candidate of shuffledCandidates) { 
+                    const candidateIdStr = (candidate as any)._id.toString(); 
                     const existingAssignments = employeeAssignmentsThisRun.get(candidateIdStr) || [];
 
                     // Check 1: Overlap
@@ -211,16 +210,14 @@ export const assignEmployeesToShifts = async (startDate: Date, endDate: Date): P
                         currentShiftStartDateTime < existing.end && currentShiftEndDateTime > existing.start
                     );
                     if (hasOverlap) {
-                        // console.log(`Candidate ${candidate.name} skipped for shift ${shift._id} due to overlap.`);
-                        continue; // Try next candidate
+                        continue; 
                     }
 
                     // Check 2: Weekly Hour Limit
                     const weekKey = `${candidateIdStr}_${weekStartDateString}`;
                     const assignedHoursThisWeek = employeeHoursPerWeek.get(weekKey) || 0;
                     if (assignedHoursThisWeek + SHIFT_DURATION > WEEKLY_HOUR_LIMIT) {
-                        // console.log(`Candidate ${candidate.name} skipped for shift ${shift._id} due to exceeding ${WEEKLY_HOUR_LIMIT}h limit for week starting ${weekStartDateString} (already at ${assignedHoursThisWeek}h).`);
-                        continue; // Try next candidate
+                        continue; 
                     }
 
                     // --- Checks passed! Assign this candidate ---
@@ -237,10 +234,10 @@ export const assignEmployeesToShifts = async (startDate: Date, endDate: Date): P
                     employeeHoursPerWeek.set(weekKey, assignedHoursThisWeek + SHIFT_DURATION);
 
                     assigned = true;
-                    break; // Move to the next shift
-                } // End loop through candidates
-            } // End if availableCandidates
-        } // End loop through shifts
+                    break; 
+                } 
+            } 
+        } 
         console.log(`[Assignment Service] Prepared ${assignmentsToMake.length} non-overlapping assignments respecting ${WEEKLY_HOUR_LIMIT}h limit.`);
 
         // 5. Perform Bulk Update
@@ -264,16 +261,13 @@ export const assignEmployeesToShifts = async (startDate: Date, endDate: Date): P
                     // Get the IDs of shifts that were intended for update
                     const assignedShiftIds = assignmentsToMake.map(a => a.shiftId);
 
-                    // Fetch the updated shifts, ensuring employee details (name, email) are populated
-                    // We need email which wasn't populated before, so populate it now.
                     const newlyAssignedShifts = await Shift.find({
                         _id: { $in: assignedShiftIds },
-                        assigned_employee: { $ne: null } // Ensure it actually got assigned
+                        assigned_employee: { $ne: null }
                     })
-                    .populate<{ assigned_employee: IEmployee | null }>('assigned_employee', 'name email'); // Populate name and email
+                    .populate<{ assigned_employee: IEmployee | null }>('assigned_employee', 'name email'); 
 
                     type PopulatedShiftForEmail = IShift & {
-                        // Override assigned_employee to ensure it's not ObjectId or null here
                         assigned_employee: IEmployee & { email: string, name: string };
                    };
 
@@ -281,13 +275,11 @@ export const assignEmployeesToShifts = async (startDate: Date, endDate: Date): P
                     const shiftsByEmployeeEmail = new Map<string, { name: string, shifts: PopulatedShiftForEmail[] }>();
 
                     newlyAssignedShifts.forEach(shift => {
-                        // Type guard to ensure employee is populated and has email/name
                         if (shift.assigned_employee && !(shift.assigned_employee instanceof mongoose.Types.ObjectId) && shift.assigned_employee.email && shift.assigned_employee.name) {
                             const empEmail = shift.assigned_employee.email;
                             if (!shiftsByEmployeeEmail.has(empEmail)) {
                                 shiftsByEmployeeEmail.set(empEmail, { name: shift.assigned_employee.name, shifts: [] });
                             }
-                            // Cast needed here because PopulatedShift type expects more fields potentially
                             shiftsByEmployeeEmail.get(empEmail)?.shifts.push(shift as PopulatedShiftForEmail);
                         }
                     });
@@ -299,19 +291,17 @@ export const assignEmployeesToShifts = async (startDate: Date, endDate: Date): P
                             email,
                             data.name,
                             data.shifts,
-                            targetMonthStr // Pass the month string for the email subject/body
+                            targetMonthStr 
                         );
                     }
                     console.log('[Assignment Service] Finished sending notifications.');
 
                 } catch (notificationError) {
-                    // Log errors related to fetching/grouping/sending notifications, but don't stop the whole process
                     console.error('[Assignment Service] Error during notification process:', notificationError);
                 }
             }
-            // --- END EMAIL NOTIFICATION LOGIC ---
 
-            return assignedCount; // Return count regardless of notification success/failure
+            return assignedCount; 
 
         } else {
             console.log('[Assignment Service] No assignments could be made.');

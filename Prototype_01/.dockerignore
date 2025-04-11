@@ -1,31 +1,23 @@
-# Python virtual environment
 .venv/
 venv/
 
-# Git files
 .git/
 .gitignore
 
-# Docker files
 Dockerfile
 docker-compose.yml
 .dockerignore
 
-# Instance folder (often managed by volumes, contains DB)
 instance/
 
-# Environment variables file (secrets!)
 .env
 
-# Python cache files
 __pycache__/
 *.pyc
 *.pyo
 
-# OS-specific files
 .DS_Store
 Thumbs.db
 
-# IDE files (optional)
 .idea/
 .vscode/
