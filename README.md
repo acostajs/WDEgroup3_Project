@@ -35,6 +35,23 @@ Technology Stack Summary
     Git & GitHub (Version Control & Code Repository)
 
 ### Option 2:
+https://wdegroup3-prototype-02.onrender.com/
+
+This prototype utilizes the following technologies, categorized by their role:
+Technology Stack Summary
+  - **Backend** -: Typescript, node.js, Express.js
+  - **Frontend** -: EJS, HTML, CSS
+  - **Database** -: MongoDB (hosted on MongoDB Atlas free tier)
+  - **Key Libraries** -:
+    Express-validator
+    Mongoose
+    Python (Pandas & Prophet (Forecasting)
+    Flask-WTF / WTForms (Web Forms)
+    Nodemailer (Email Notifications)
+  - **DevOps & Hosting** -:
+    Docker & Docker Compose (Containerization)
+    Render (PaaS Cloud Hosting: Web Service & PostgreSQL Database)
+    Git & GitHub (Version Control & Code Repository)
 
 
 This system aims to automate scheduling and improve efficiency, ensuring that the right employees work at the right times while optimizing labor costs.
