@@ -4,7 +4,8 @@ import path from 'path';
 dotenv.config({ path: path.resolve(__dirname, '../.env') }); 
 
 const config = {
-  port: process.env.PORT || 3000,           
+  port: process.env.PORT || 3000,   
+  sessionSecret: process.env.SESSION_SECRET || 'local-dev-secret-replace-me!',        
   mongoUri: process.env.MONGO_URI || 'mongodb://localhost:27017/prototype_02',
   emailServiceProvider: process.env.EMAIL_SERVICE_PROVIDER, 
   emailService: process.env.EMAIL_SERVICE,         
