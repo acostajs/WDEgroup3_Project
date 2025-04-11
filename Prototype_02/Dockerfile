@@ -13,7 +13,7 @@ RUN pip3 install --break-system-packages -r python_scripts/requirements.txt
 
 COPY package*.json ./
 
-RUN npm ci
+RUN NODE_ENV=development npm install
 
 COPY tsconfig.json ./
 COPY src ./src
